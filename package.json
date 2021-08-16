@@ -10,7 +10,8 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "svelte": "^3.37.0"
+    "svelte": "^3.37.0",
+    "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
     "@snowpack/plugin-dotenv": "^2.1.0",
@@ -20,6 +21,7 @@
     "@snowpack/plugin-typescript": "^1.2.1",
     "@tsconfig/svelte": "^2.0.1",
     "@types/snowpack-env": "^2.3.3",
+    "@types/webextension-polyfill": "^0.8.0",
     "cssnano": "^5.0.7",
     "glob": "^7.1.7",
     "husky": "^7.0.1",

@@ -18,7 +18,7 @@
     /* Additional Options */
     "strict": true,
     "skipLibCheck": true,
-    "types": ["snowpack-env", "svelte"],
+    "types": ["snowpack-env", "svelte", "webextension-polyfill"],
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "useDefineForClassFields": true,

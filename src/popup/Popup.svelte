@@ -1,5 +1,9 @@
+<script lang="ts">
+  import browser from "webextension-polyfill";
+</script>
+
 <span>Hello, popup!</span>
-<button type="button" on:click={() => chrome.runtime.openOptionsPage()}>
+<button type="button" on:click={() => browser.runtime.openOptionsPage()}>
   Options
 </button>
 
