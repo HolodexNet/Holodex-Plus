@@ -10,8 +10,8 @@
   const content_extra = glob
     .sync("**/*.ts", { cwd: "src/content" })
     .filter((file) => file !== "index.ts")
-    .map((file) =>
-      "content/" + path.basename(file, path.extname(file)) + ".js"
+    .map(
+      (file) => "content/" + path.basename(file, path.extname(file)) + ".js"
     );
 
   const web_accessible_resources =
@@ -39,7 +39,7 @@
             js: ["content/index.js"],
             // Allow acess to inner iframe (like the iframe embed on Holodex)
             all_frames: true,
-            run_at: "document_end"
+            run_at: "document_end",
           },
         ],
         permissions: [
@@ -48,7 +48,7 @@
           "tabs",
           "webRequest",
           "webRequestBlocking",
-          ...urlGlobs
+          ...urlGlobs,
         ],
         web_accessible_resources,
         browser_action: {

@@ -1,5 +1,3 @@
-const cfg = window.ytcfg;
-
 // List of flags and desired values
 const overrides: Record<string, string> = {
   autoplay_time: "8000",
@@ -34,26 +32,33 @@ const overrides: Record<string, string> = {
   html5_streaming_xhr: "false",
 };
 
-if (!cfg) {
-  console.warn("disablePlayability: ytcfg is missing");
-} else {
+const cfg = window.ytcfg;
+
+function overrideCfg() {
+  if (!cfg) {
+    console.warn("disablePlayability: ytcfg is missing");
+    return;
+  }
+
   const configs = cfg.get("WEB_PLAYER_CONTEXT_CONFIGS");
   let flags =
     configs?.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER
       ?.serializedExperimentFlags;
-  if (flags) {
-    Object.keys(overrides).forEach((key) => {
-      const regex = new RegExp(`(?<=${key}=)[^&]+(?<!&)`);
-      const val = overrides[key];
-      if (flags.match(regex)) {
-        flags = flags.replace(regex, val);
-      } else {
-        flags += `&${key}=${val}`;
-      }
-    });
-    configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags =
-      flags;
-    configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
-    console.log("[Holodex-Plus] Sucessfully set overrides");
-  }
+  if (!flags) return;
+
+  Object.keys(overrides).forEach((key) => {
+    const regex = new RegExp(`(?<=${key}=)[^&]+(?<!&)`);
+    const val = overrides[key];
+    if (flags.match(regex)) {
+      flags = flags.replace(regex, val);
+    } else {
+      flags += `&${key}=${val}`;
+    }
+  });
+
+  configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags =
+    flags;
+  configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
+
+  console.log("[Holodex-Plus] Successfully set overrides");
 }
