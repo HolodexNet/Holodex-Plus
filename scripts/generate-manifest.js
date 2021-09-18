@@ -8,14 +8,14 @@ import fs from "fs-extra";
  * @property {string} version Extension verson
  * @property {string} description Extension description
  * @property {string[]} urls List of urls which this extension wants to access
- * @property {string} root Root directory from which `icons` are resolved
+ * @property {string} rootDir Root directory from which `icons` are resolved
  * @property {{ [size in 16 | 32 | 48 | 64 | 128]: string }} icons Icons used by the extension
  */
 
 /**
  * @type {(options: Options) => import("rollup").Plugin}
  */
-const plugin = ({ name, version, description, urls, root, icons }) => {
+const plugin = ({ name, version, description, urls, rootDir: root, icons }) => {
   return {
     name: "generate-manifest",
     async generateBundle() {
