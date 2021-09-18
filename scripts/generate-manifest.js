@@ -5,11 +5,13 @@
 
   const { name, description, version } = require("../package.json");
 
+  const urlGlobs = ["https://*.holodex.net/*", "*://*.youtube.com/*"];
+
   const content_extra = glob
     .sync("**/*.ts", { cwd: "src/content" })
     .filter((file) => file !== "index.ts")
     .map((file) =>
-      path.join("content", path.basename(file, path.extname(file)) + ".js")
+      "content/" + path.basename(file, path.extname(file)) + ".js"
     );
 
   const web_accessible_resources =
@@ -33,11 +35,21 @@
         },
         content_scripts: [
           {
-            matches: ["https://*/*", "http://*/*"],
+            matches: urlGlobs,
             js: ["content/index.js"],
+            // Allow acess to inner iframe (like the iframe embed on Holodex)
+            all_frames: true,
+            run_at: "document_end"
           },
         ],
-        permissions: ["storage", "activeTab", "tabs"],
+        permissions: [
+          "storage",
+          "activeTab",
+          "tabs",
+          "webRequest",
+          "webRequestBlocking",
+          ...urlGlobs
+        ],
         web_accessible_resources,
         browser_action: {
           default_icon: { ...icons },

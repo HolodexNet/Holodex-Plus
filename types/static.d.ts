@@ -55,5 +55,10 @@ declare module "*.png" {
   const ref: string;
   export default ref;
 }
+export declare global {
+  interface Window {
+    ytcfg: any
+  }
+}
 
 /* CUSTOM: ADD YOUR OWN HERE */

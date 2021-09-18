@@ -22,6 +22,7 @@
     "@tsconfig/svelte": "^2.0.1",
     "@types/snowpack-env": "^2.3.3",
     "@types/webextension-polyfill": "^0.8.0",
+    "@types/chrome": "^0.0.157",
     "cssnano": "^5.0.7",
     "glob": "^7.1.7",
     "husky": "^7.0.1",

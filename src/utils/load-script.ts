@@ -1,8 +1,6 @@
-// import loadScript from "../utils/load-script";
-
-function loadScript (scriptNameInContent: string) {
+export default function load (scriptNameInContent: string) {
   var s = document.createElement('script');
-  s.src = chrome.runtime.getURL(`content/${scriptNameInContent}`);
+  s.src = chrome.runtime.getURL(scriptNameInContent);
   // Remove script after insert
   s.onload = function() {
       // @ts-ignore
@@ -10,5 +8,3 @@ function loadScript (scriptNameInContent: string) {
   };
   (document.head || document.documentElement).appendChild(s);
 }
-
-loadScript("yt-embed-inject.js");
