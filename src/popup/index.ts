@@ -1,5 +1,3 @@
-import Popup from "./Popup.svelte";
+console.log("Hello, popup");
 
-const popup = new Popup({ target: document.body });
-
-export default popup;
+export {};

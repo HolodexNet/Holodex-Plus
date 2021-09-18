@@ -1,13 +1,9 @@
-// import loadScript from "../utils/load-script";
+import browser from "webextension-polyfill";
+import { inject } from "./yt-embed-inject.js";
 
-function loadScript(scriptNameInContent: string) {
-  const s = document.createElement("script");
-  s.src = chrome.runtime.getURL(`content/${scriptNameInContent}`);
+browser.storage.local
+  .get(null)
+  .then((data) => console.log("[Holodex Plus] extension local storage data", data)
+  );
 
-  // Remove script after insert
-  s.onload = () => s.remove();
-
-  (document.head || document.documentElement).appendChild(s);
-}
-
-loadScript("yt-embed-inject.js");
+inject();
