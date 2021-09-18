@@ -1,4 +1,4 @@
-export function inject() {
+export function ytInject() {
   console.log("[Holodex-Plus] Setting YT player overrides");
 
   // List of flags and desired values
@@ -59,6 +59,8 @@ export function inject() {
         flags;
       configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
       console.log("[Holodex-Plus] Sucessfully set overrides");
+    } else {
+      console.log("[Holodex-Plus] serializedExperimentFlags is missing");
     }
   }
 }
