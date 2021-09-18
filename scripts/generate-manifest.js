@@ -80,4 +80,3 @@ const plugin = ({ name, version, description, urls, root, icons }) => {
 };
 
 export default plugin;
-
