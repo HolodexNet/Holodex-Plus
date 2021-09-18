@@ -4,5 +4,5 @@
   "semi": true,
   "singleQuote": false,
   "endOfLine": "crlf",
-  "svelteBracketNewLine": true
+  "printWidth": 120
 }

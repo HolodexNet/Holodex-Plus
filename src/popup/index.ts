@@ -1,5 +1,6 @@
-import Popup from "./Popup.svelte";
+import "../util";
+import browser from "webextension-polyfill";
 
-const popup = new Popup({ target: document.body });
+console.log("Hello, popup");
 
-export default popup;
+export {};

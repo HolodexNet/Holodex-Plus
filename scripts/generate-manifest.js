@@ -1,57 +1,84 @@
-(async function () {
-  const path = require("path");
-  const fs = require("fs").promises;
-  const glob = require("glob");
+// @ts-check
 
-  const { name, description, version } = require("../package.json");
+import path from "path";
+import fs from "fs-extra";
 
-  const content_extra = glob
-    .sync("**/*.ts", { cwd: "src/content" })
-    .filter((file) => file !== "index.ts")
-    .map((file) =>
-      path.join("content", path.basename(file, path.extname(file)) + ".js")
-    );
+/**
+ * @typedef ContentScript
+ * @property {string[]} matches List of URLs where this content script should be injected (can use wildcard * symbol)
+ * @property {string} path Path to the script file **relative to the build directory**
+ * @property {boolean | undefined} allFrames
+ *
+ * @typedef Options
+ * @property {string} name Name of the extension
+ * @property {string} version Extension verson
+ * @property {string} description Extension description
+ * @property {ContentScript[]} content Mapping which determines which `script` is loaded in which `url`
+ * @property {string[]} accessible Files which should be accessible from content scripts **relative to build directory**
+ * @property {string} iconDir Icons used by the extension
+ */
 
-  const web_accessible_resources =
-    content_extra.length > 0 ? content_extra : undefined;
+/**
+ * @type {(options: Options) => import("rollup").Plugin}
+ */
+const plugin = ({ name, version, description, content, accessible, iconDir }) => {
+  return {
+    name: "generate-manifest",
+    async generateBundle() {
+      /** @type {Record<string, string>} */
+      const icons = {};
+      [16, 32, 48, 64, 128].forEach((size) => {
+        icons[size] = `icons/${size}.png`;
+      });
 
-  const icons = Object.fromEntries(
-    ["16", "32", "48", "64", "128"].map((size) => [size, `img/${size}.png`])
-  );
+      await Promise.all(
+        [16, 32, 48, 64, 128].map(async (size) => {
+          this.emitFile({
+            type: "asset",
+            fileName: icons[size],
+            source: new Uint8Array((await fs.readFile(path.join(iconDir, `${size}.png`))).buffer),
+          });
+        })
+      );
 
-  await fs.writeFile(
-    "build/manifest.json",
-    JSON.stringify(
-      {
-        manifest_version: 2,
-        name,
-        description,
-        version,
-        icons,
-        background: {
-          scripts: ["background/index.js"],
-        },
-        content_scripts: [
+      this.emitFile({
+        type: "asset",
+        fileName: "manifest.json",
+        source: JSON.stringify(
           {
-            matches: ["https://*/*", "http://*/*"],
-            js: ["content/index.js"],
+            manifest_version: 2,
+            name,
+            description,
+            version,
+            icons,
+            background: {
+              page: "background/index.html",
+            },
+            content_scripts: content.map(({ matches, path, allFrames }) => ({
+              matches,
+              js: [path],
+              all_frames: Boolean(allFrames),
+              run_at: "document_end",
+            })),
+            web_accessible_resources: accessible,
+            permissions: ["storage", "activeTab", "tabs", "webRequest", "webRequestBlocking"],
+            browser_action: {
+              default_icon: { ...icons },
+              default_popup: "popup/index.html",
+              default_title: name,
+            },
+            options_ui: {
+              browser_style: true,
+              page: "options/index.html",
+              open_in_tab: true,
+            },
           },
-        ],
-        permissions: ["storage", "activeTab", "tabs"],
-        web_accessible_resources,
-        browser_action: {
-          default_icon: { ...icons },
-          default_popup: "popup.html",
-          default_title: name,
-        },
-        options_ui: {
-          browser_style: true,
-          page: "options.html",
-          open_in_tab: true,
-        },
-      },
-      null,
-      true
-    )
-  );
-})();
+          null,
+          2
+        ),
+      });
+    },
+  };
+};
+
+export default plugin;

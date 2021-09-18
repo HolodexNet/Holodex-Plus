@@ -1,5 +1,6 @@
-import Options from "./Options.svelte";
+import "../util";
+import browser from "webextension-polyfill";
 
-const options = new Options({ target: document.body });
+console.log("Hello, options");
 
-export default options;
+export {};
