@@ -2,8 +2,13 @@
 chrome.webRequest.onHeadersReceived.addListener(
   function (details) {
     return {
-      responseHeaders: details?.responseHeaders?.filter(header => header.name.toLowerCase() !== 'x-frame-options')
+      responseHeaders: details?.responseHeaders?.filter(
+        (header) => header.name.toLowerCase() !== "x-frame-options"
+      ),
     };
-  }, {
-    urls: ["*://*.youtube.com/*"]
-  }, ["blocking", "responseHeaders"]);
+  },
+  {
+    urls: ["*://*.youtube.com/*"],
+  },
+  ["blocking", "responseHeaders"]
+);

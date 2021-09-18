@@ -1,12 +1,12 @@
 // import loadScript from "../utils/load-script";
 
-function loadScript (scriptNameInContent: string) {
-  var s = document.createElement('script');
+function loadScript(scriptNameInContent: string) {
+  var s = document.createElement("script");
   s.src = chrome.runtime.getURL(`content/${scriptNameInContent}`);
+
   // Remove script after insert
-  s.onload = function() {
-      // @ts-ignore
-      this.remove();
+  s.onload = function () {
+    s.remove();
   };
   (document.head || document.documentElement).appendChild(s);
 }

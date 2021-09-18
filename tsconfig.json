@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "include": ["src", "types"],
-  
+
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "node",
@@ -25,6 +25,6 @@
     "useDefineForClassFields": true,
     "allowSyntheticDefaultImports": true,
     "importsNotUsedAsValues": "error",
-    "isolatedModules": false,
+    "isolatedModules": false
   }
 }

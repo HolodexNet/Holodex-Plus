@@ -1,8 +1,7 @@
-
 const cfg = window.ytcfg;
 
 // List of flags and desired values
-const overrides: any = {
+const overrides: Record<string, string> = {
   autoplay_time: "8000",
   autoplay_time_for_music_content: "3000",
   csi_on_gel: "true",
@@ -36,22 +35,24 @@ const overrides: any = {
 };
 
 if (!cfg) {
-    console.warn("disablePlayability: ytcfg is missing");
+  console.warn("disablePlayability: ytcfg is missing");
 } else {
   const configs = cfg.get("WEB_PLAYER_CONTEXT_CONFIGS");
-  let flags = configs?.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER?.serializedExperimentFlags;
-  if(flags) {
-    Object.keys(overrides).forEach(key => {
+  let flags =
+    configs?.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER
+      ?.serializedExperimentFlags;
+  if (flags) {
+    Object.keys(overrides).forEach((key) => {
       const regex = new RegExp(`(?<=${key}=)[^&]+(?<!&)`);
       const val = overrides[key];
-      if(flags.match(regex)) {
+      if (flags.match(regex)) {
         flags = flags.replace(regex, val);
-      }
-      else {
+      } else {
         flags += `&${key}=${val}`;
       }
     });
-    configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags = flags;
+    configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags =
+      flags;
     configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
     console.log("[Holodex-Plus] Sucessfully set overrides");
   }
