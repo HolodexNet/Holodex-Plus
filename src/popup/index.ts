@@ -1,6 +1,4 @@
 import "../util";
 import browser from "webextension-polyfill";
 
-console.log("Hello, popup");
-
-export {};
+document.getElementById("options")?.addEventListener("click", () => browser.runtime.openOptionsPage());

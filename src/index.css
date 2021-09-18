@@ -1,0 +1,29 @@
+* {
+  box-sizing: border-box;
+  color: var(--text-color);
+}
+
+:root {
+  --bg-color: #363636;
+  --bg-color-light: #666666;
+  --text-color: #fff;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-color);
+}
+
+button {
+  background: none;
+  border: none;
+}
+button:hover,
+button:focus,
+button:active {
+  background: var(--bg-color-light);
+}
+
+button.link {
+  padding: 8px 16px;
+}
