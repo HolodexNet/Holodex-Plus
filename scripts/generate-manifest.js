@@ -1,35 +1,46 @@
+// @ts-check
+
 import path from "path";
 import fs from "fs-extra";
 
 /**
+ * @typedef ContentScript
+ * @property {string[]} matches List of URLs where this content script should be injected (can use wildcard * symbol)
+ * @property {string} path Path to the script file **relative to the build directory**
+ * @property {boolean | undefined} allFrames
  *
  * @typedef Options
  * @property {string} name Name of the extension
  * @property {string} version Extension verson
  * @property {string} description Extension description
- * @property {string[]} urls List of urls which this extension wants to access
- * @property {string} rootDir Root directory from which `icons` are resolved
- * @property {{ [size in 16 | 32 | 48 | 64 | 128]: string }} icons Icons used by the extension
+ * @property {ContentScript[]} content Mapping which determines which `script` is loaded in which `url`
+ * @property {string[]} accessible Files which should be accessible from content scripts **relative to build directory**
+ * @property {string} iconDir Icons used by the extension
  */
 
 /**
  * @type {(options: Options) => import("rollup").Plugin}
  */
-const plugin = ({ name, version, description, urls, rootDir: root, icons }) => {
+const plugin = ({ name, version, description, content, accessible, iconDir }) => {
   return {
     name: "generate-manifest",
     async generateBundle() {
+      /** @type {Record<string, string>} */
+      const icons = {};
+      [16, 32, 48, 64, 128].forEach((size) => {
+        icons[size] = `icons/${size}.png`;
+      });
+
       await Promise.all(
-        Object.entries(icons).map(async ([size, url]) => {
+        [16, 32, 48, 64, 128].map(async (size) => {
           this.emitFile({
             type: "asset",
-            fileName: `icons/${size}.png`,
-            source: new Uint8Array(
-              (await fs.readFile(path.join(root, url))).buffer
-            ),
+            fileName: icons[size],
+            source: new Uint8Array((await fs.readFile(path.join(iconDir, `${size}.png`))).buffer),
           });
         })
       );
+
       this.emitFile({
         type: "asset",
         fileName: "manifest.json",
@@ -43,23 +54,14 @@ const plugin = ({ name, version, description, urls, rootDir: root, icons }) => {
             background: {
               page: "background/index.html",
             },
-            content_scripts: [
-              {
-                matches: urls,
-                js: ["content/index.js"],
-                // Allow acess to inner iframe (like the iframe embed on Holodex)
-                all_frames: true,
-                run_at: "document_end",
-              },
-            ],
-            permissions: [
-              "storage",
-              "activeTab",
-              "tabs",
-              "webRequest",
-              "webRequestBlocking",
-              ...urls,
-            ],
+            content_scripts: content.map(({ matches, path, allFrames }) => ({
+              matches,
+              js: [path],
+              all_frames: Boolean(allFrames),
+              run_at: "document_end",
+            })),
+            web_accessible_resources: accessible,
+            permissions: ["storage", "activeTab", "tabs", "webRequest", "webRequestBlocking"],
             browser_action: {
               default_icon: { ...icons },
               default_popup: "popup/index.html",

@@ -1,4 +1,3 @@
-import path from "path";
 import typescript from "rollup-plugin-typescript2";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
@@ -13,8 +12,15 @@ const sharedPlugins = [
   // instead of as external chunks
   resolve(),
   commonjs(),
-  terser(),
+  terser({ ecma: 2020 }),
 ];
+
+/** @returns {import("rollup").RollupOptions} */
+const content = (/** @type {string} */ input, /** @type {string} */ output) => ({
+  input,
+  plugins: [...sharedPlugins],
+  output: { file: output, format: "iife" },
+});
 
 /** @type {import("rollup").RollupOptions[]} */
 const options = [
@@ -25,29 +31,24 @@ const options = [
       html({
         rootDir: "src",
         flattenOutput: false,
-        input: [
-          "background/index.html",
-          "options/index.html",
-          "popup/index.html",
-        ],
+        input: ["background/index.html", "options/index.html", "popup/index.html"],
       }),
       manifest({
         name: "Holodex Plus",
         version: pkg.version,
         description: pkg.description,
-        urls: ["*://*.holodex.net/*", "*://*.youtube.com/*"],
-        rootDir: "src",
-        icons: Object.fromEntries(
-          [16, 32, 48, 64, 128].map((size) => [size, `icons/${size}.png`])
-        ),
+        content: [
+          { matches: ["*://*.holodex.net/*"], path: "content/holodex.js" },
+          { matches: ["*://*.youtube.com/*"], path: "content/youtube.js", allFrames: true },
+        ],
+        accessible: ["content/yt-embed-inject.js"],
+        iconDir: "src/icons",
       }),
     ],
   },
-  /* content */ {
-    input: "src/content/index.ts",
-    plugins: [...sharedPlugins],
-    output: { file: "build/content/index.js", format: "iife" },
-  },
+  content("src/content/holodex.ts", "build/content/holodex.js"),
+  content("src/content/youtube.ts", "build/content/youtube.js"),
+  content("src/content/yt-embed-inject.ts", "build/content/yt-embed-inject.js"),
 ];
 
 export default options;
