@@ -20,5 +20,6 @@
   "svelte.plugin.css.diagnostics.enable": false,
   "editor.detectIndentation": false,
   "editor.tabSize": 2,
-  "editor.insertSpaces": true
+  "editor.insertSpaces": true,
+  "cSpell.words": ["ytcfg"]
 }
