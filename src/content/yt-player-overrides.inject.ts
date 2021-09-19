@@ -1,4 +1,6 @@
-console.log("[Holodex+] Setting YT player overrides");
+import "../util";
+
+console.log("Setting YT player overrides");
 
 // List of flags and desired values
 const overrides: Record<string, string> = {
@@ -38,7 +40,7 @@ const overrides: Record<string, string> = {
 const cfg = window.ytcfg;
 
 if (!cfg) {
-  console.warn("[Holodex+] disablePlayability: ytcfg is missing");
+  console.warn("disablePlayability: ytcfg is missing");
 } else {
   const configs = cfg.get("WEB_PLAYER_CONTEXT_CONFIGS");
   let flags = configs?.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER?.serializedExperimentFlags;
@@ -54,7 +56,7 @@ if (!cfg) {
     });
     configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags = flags;
     configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
-    console.log("[Holodex+] Sucessfully set overrides");
+    console.log("Sucessfully set overrides");
   }
 }
 

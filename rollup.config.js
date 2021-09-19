@@ -5,6 +5,9 @@ import html from "@web/rollup-plugin-html";
 import manifest from "./scripts/generate-manifest";
 import pkg from "./package.json";
 import { terser } from "rollup-plugin-terser";
+import { sync as glob } from "glob";
+import path from "path";
+import clean from "./scripts/clean";
 
 const sharedPlugins = [
   typescript({ typescript: require("typescript") }),
@@ -16,10 +19,10 @@ const sharedPlugins = [
 ];
 
 /** @returns {import("rollup").RollupOptions} */
-const content = (/** @type {string} */ input, /** @type {string} */ output) => ({
+const content = (/** @type {string} */ input) => ({
   input,
   plugins: [...sharedPlugins],
-  output: { file: output, format: "iife" },
+  output: { file: path.join("build/content", path.basename(input, path.extname(input)) + ".js"), format: "iife" },
 });
 
 /** @type {import("rollup").RollupOptions[]} */
@@ -27,6 +30,7 @@ const options = [
   /* background, options, popup + manifest */ {
     output: { dir: "build" },
     plugins: [
+      clean({ dir: "build" }),
       ...sharedPlugins,
       html({
         rootDir: "src",
@@ -38,17 +42,16 @@ const options = [
         version: pkg.version,
         description: pkg.description,
         content: [
-          { matches: ["*://*.holodex.net/*"], path: "content/holodex.js" },
-          { matches: ["*://*.youtube.com/*"], path: "content/youtube.js", allFrames: true },
+          { matches: ["*://*.holodex.net/*"], path: "content/holodex.inject.js" },
+          { matches: ["*://*.youtube.com/embed/*"], path: "content/yt-player.inject.js", allFrames: true },
+          { matches: ["*://*.youtube.com/live_chat*"], path: "content/yt-chat.inject.js", allFrames: true },
         ],
-        accessible: ["content/yt-embed-inject.js"],
+        accessible: ["content/yt-player-overrides.inject.js", "content/yt-chat-overrides.inject.js"],
         iconDir: "src/icons",
       }),
     ],
   },
-  content("src/content/holodex.ts", "build/content/holodex.js"),
-  content("src/content/youtube.ts", "build/content/youtube.js"),
-  content("src/content/yt-embed-inject.ts", "build/content/yt-embed-inject.js"),
+  ...glob("src/content/**/*.inject.ts").map(content),
 ];
 
 export default options;
