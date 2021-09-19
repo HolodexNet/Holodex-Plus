@@ -1,4 +1,3 @@
-import "../util";
 import browser from "webextension-polyfill";
 
 const id = window.location.pathname.split("/").slice(-1)[0];

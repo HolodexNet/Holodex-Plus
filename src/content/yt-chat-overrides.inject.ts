@@ -1,5 +1,3 @@
-import "../util";
-
 // https://greasyfork.org/en/scripts/422206-workaround-for-youtube-chat-memory-leaks/code
 
 // @ts-ignore

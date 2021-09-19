@@ -1,5 +1,3 @@
-import "../util";
-
 console.log("[Holodex+]", "Setting YT player overrides");
 
 // List of flags and desired values
