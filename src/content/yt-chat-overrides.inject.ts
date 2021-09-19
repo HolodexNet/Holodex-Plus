@@ -14,44 +14,44 @@ const ytcfg = window.ytcfg;
  */
 function fixSchedulerLeak() {
   if (!window.requestAnimationFrame) {
-    console.warn("fixSchedulerLeak: window.requestAnimationFrame() is required, but missing");
+    console.warn("[Holodex+]", "fixSchedulerLeak: window.requestAnimationFrame() is required, but missing");
     return;
   }
   const scheduler = ytglobal && ytglobal.schedulerInstanceInstance_;
   if (!scheduler) {
-    console.warn("fixSchedulerLeak: schedulerInstanceInstance_ is missing");
+    console.warn("[Holodex+]", "fixSchedulerLeak: schedulerInstanceInstance_ is missing");
     return;
   }
   const code = "" + scheduler.constructor;
   const p1 = code.match(/this\.(\w+)\s*=\s*!!\w+\.useRaf/);
   const p2 = code.match(/\(\"visibilitychange\",\s*this\.(\w+)\)/);
   if (!p1 || !p2) {
-    console.warn("fixSchedulerLeak: unknown code");
+    console.warn("[Holodex+]", "fixSchedulerLeak: unknown code");
     return;
   }
   const useRafProp = p1[1];
   const visChgProp = p2[1];
   if (scheduler[useRafProp]) {
-    console.info("fixSchedulerLeak: no work needed");
+    console.info("[Holodex+]", "fixSchedulerLeak: no work needed");
     return;
   }
   scheduler[useRafProp] = true;
   document.addEventListener("visibilitychange", scheduler[visChgProp]);
-  console.info("fixSchedulerLeak: leak fixed");
+  console.info("[Holodex+]", "fixSchedulerLeak: leak fixed");
 }
 
 /* Enable the element pool to save memory consumption. */
 function enableElementPool() {
   if (!ytcfg) {
-    console.warn("enableElementPool: ytcfg is missing");
+    console.warn("[Holodex+]", "enableElementPool: ytcfg is missing");
     return;
   }
   if (ytcfg.get("ELEMENT_POOL_DEFAULT_CAP")) {
-    console.info("enableElementPool: no work needed");
+    console.info("[Holodex+]", "[Holodex+]", "enableElementPool: no work needed");
     return;
   }
   ytcfg.set("ELEMENT_POOL_DEFAULT_CAP", 75);
-  console.info("enableElementPool: element pool enabled");
+  console.info("[Holodex+]", "enableElementPool: element pool enabled");
 }
 
 fixSchedulerLeak();
