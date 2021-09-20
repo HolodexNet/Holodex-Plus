@@ -23,4 +23,14 @@ export function splitOnUpperCase(text: string): string[] {
   return result;
 }
 
+const encoder = new TextEncoder();
+export async function sha1(message: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-1", encoder.encode(message)));
+  let hash = "";
+  for (let i = 0; i < bytes.length; ++i) {
+    hash += bytes[i].toString(16).padStart(2, "0");
+  }
+  return hash;
+}
+
 export * from "./storage";

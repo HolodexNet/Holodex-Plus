@@ -48,6 +48,7 @@ const options = [
         ],
         accessible: ["content/yt-player-overrides.inject.js", "content/yt-chat-overrides.inject.js"],
         iconDir: "src/icons",
+        permissions: ["*://*.youtube.com/*"],
       }),
     ],
   },
