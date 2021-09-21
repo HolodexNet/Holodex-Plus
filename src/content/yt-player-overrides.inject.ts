@@ -36,6 +36,7 @@ const overrides: Record<string, string> = {
 
 // @ts-ignore
 const cfg = window.ytcfg;
+const id = window.location.pathname.split("/").slice(-1)[0];
 
 if (!cfg) {
   console.warn("[Holodex+]", "disablePlayability: ytcfg is missing");
