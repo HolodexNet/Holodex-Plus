@@ -68,7 +68,7 @@ if (videoId) {
   }
 
   if (ytLikeData) {
-    ipc.on("like", () => like().then(() => window.alert("liked")));
+    ipc.on("like", () => like().then(() => ipc.send("liked")));
     ipc.send("loaded");
   }
 })();
