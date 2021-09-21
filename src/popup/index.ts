@@ -1,3 +1,3 @@
-import browser from "webextension-polyfill";
+import { runtime } from "webextension-polyfill";
 
-document.getElementById("options")?.addEventListener("click", () => browser.runtime.openOptionsPage());
+document.getElementById("options")?.addEventListener("click", () => runtime.openOptionsPage());

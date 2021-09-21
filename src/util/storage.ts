@@ -1,4 +1,4 @@
-import browser from "webextension-polyfill";
+import { storage } from "webextension-polyfill";
 
 export const OptionsSchema = {
   liveChatMemoryLeakFix: "boolean",
@@ -15,14 +15,14 @@ export type OptionsData = {
 
 export const Options = {
   async get<K extends keyof OptionsData>(key: K): Promise<OptionsData[K] | null> {
-    const result = await browser.storage.local.get(key);
+    const result = await storage.local.get(key);
     return key in result ? result[key] : null;
   },
   async set<K extends keyof OptionsData>(key: K, value: OptionsData[K]): Promise<void> {
-    await browser.storage.local.set({ [key]: value });
+    await storage.local.set({ [key]: value });
   },
   subscribe(callback: (changes: { [K in keyof OptionsData]?: browser.Storage.StorageChange }) => void) {
-    browser.storage.onChanged.addListener((changes, type) => {
+    storage.onChanged.addListener((changes, type) => {
       if (type !== "local") return;
       callback(changes);
     });
