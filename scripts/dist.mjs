@@ -19,4 +19,4 @@ const archive = archiver("zip");
 archive.on("error", (e) => (console.error(e), process.exit(1)));
 archive.pipe(out);
 archive.glob("**/*", { cwd: path.join(process.cwd(), "build") });
-archive.finalize().then(() => console.log("Done"));
+archive.finalize();
