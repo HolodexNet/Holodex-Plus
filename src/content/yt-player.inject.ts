@@ -6,7 +6,6 @@ if (videoId) {
 }
 
 (async () => {
-  Options.get("remoteLikeButton").then((v) => console.log("remoteLikeButton:", v));
   if (!(await Options.get("remoteLikeButton"))) return;
   async function getYtLikeData() {
     const doc = await fetch(`https://www.youtube.com/watch?v=${videoId}`).then((r) => r.text());
@@ -36,8 +35,9 @@ if (videoId) {
   }
 
   const ytLikeData = await getYtLikeData();
+  console.log("data", ytLikeData);
   async function like() {
-    if (!ytLikeData) return;
+    if (!ytLikeData) return false;
     const { apiKey, context, pageId, ytClientName, ytClientVersion, PAPISID, likeParams } = ytLikeData;
     const nowTime = Math.floor(Date.now() / 1000);
     try {
@@ -62,15 +62,18 @@ if (videoId) {
           params: likeParams,
         }),
       }).then(async (r) => ({ status: r.status, body: await r.text() }));
+      console.log("[Holodex+]", res);
       if (res.status === 200 && res.body.includes("Added to Liked videos")) {
         return true;
       }
-    } catch (_) {}
+    } catch (e) {
+      console.error("[Holodex+]", e);
+    }
     return false;
   }
 
   if (ytLikeData) {
-    ipc.on("like", () => like().then(() => ipc.send("liked")));
+    ipc.on("like", async () => (await like()) && ipc.send("liked"));
     ipc.send("loaded");
   }
 })();
