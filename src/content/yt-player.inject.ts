@@ -35,7 +35,6 @@ if (videoId) {
   }
 
   const ytLikeData = await getYtLikeData();
-  console.log("data", ytLikeData);
   async function like() {
     if (!ytLikeData) return false;
     const { apiKey, context, pageId, ytClientName, ytClientVersion, PAPISID, likeParams } = ytLikeData;
@@ -62,12 +61,11 @@ if (videoId) {
           params: likeParams,
         }),
       }).then(async (r) => ({ status: r.status, body: await r.text() }));
-      console.log("[Holodex+]", res);
       if (res.status === 200 && res.body.includes("Added to Liked videos")) {
         return true;
       }
     } catch (e) {
-      console.error("[Holodex+]", e);
+      console.error("[Holodex+] Error while sending like:", e);
     }
     return false;
   }

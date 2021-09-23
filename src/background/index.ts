@@ -1,5 +1,6 @@
 import { ipc } from "src/util";
 import { webRequest, runtime } from "webextension-polyfill";
+import type { Runtime } from "webextension-polyfill";
 
 ipc.setupProxy();
 
@@ -12,8 +13,14 @@ webRequest.onHeadersReceived.addListener(
   ["blocking", "responseHeaders"]
 );
 
+const getBrowserInfo = async (): Promise<Runtime.BrowserInfo> => {
+  // @ts-ignore it is not defined in chrome... so much for a polyfill
+  if (runtime.getBrowserInfo) return await runtime.getBrowserInfo();
+  else return { name: "Unknown", vendor: "Unknown", version: "Unknown", buildID: "Unknown" };
+};
+
 // Ensure that 'origin' is present for like requests in Firefox.
-runtime.getBrowserInfo().then((info) => {
+getBrowserInfo().then((info) => {
   if (info.name === "Firefox") {
     webRequest.onBeforeSendHeaders.addListener(
       (details) => {

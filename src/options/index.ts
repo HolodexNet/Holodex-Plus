@@ -17,18 +17,23 @@ import { mdiHelp } from "@mdi/js";
         )
       );
       if (OptionsDescription[name]) {
-        text.innerHTML += `
-          <div class="tooltip">
-            ${svg(mdiHelp, "help-icon tooltip-anchor")}
-            <div class="tooltip-text">${OptionsDescription[name]}</div>
-          </div>
-        `;
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip";
+
+        const icon = svg(mdiHelp, "help-icon tooltip-anchor");
+        tooltip.appendChild(icon);
+
+        const tooltipText = document.createElement("div");
+        tooltipText.className = "tooltip-text";
+        tooltipText.appendChild(new Text(OptionsDescription[name]));
+        tooltip.appendChild(tooltipText);
+
+        text.appendChild(tooltip);
       }
       container.appendChild(text);
 
       const switchContainer = document.createElement("div");
       switchContainer.className = "switch";
-      container.appendChild(switchContainer);
 
       const input = document.createElement("input");
       input.id = `field-${name}`;
@@ -43,6 +48,8 @@ import { mdiHelp } from "@mdi/js";
       label.className = "switch-label";
       label.textContent = name;
       switchContainer.appendChild(label);
+
+      container.appendChild(switchContainer);
 
       form.appendChild(container);
     }

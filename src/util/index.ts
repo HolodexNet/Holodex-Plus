@@ -35,10 +35,17 @@ export async function sha1(message: string) {
   return hash;
 }
 
-export const svg = (path: string, clazz?: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ${
-    clazz ? `class="${clazz}"` : ""
-  }><path d="${path}" /></svg>`;
+export const svg = (d: string, clazz?: string) => {
+  const xmlns = "http://www.w3.org/2000/svg";
+
+  const out = document.createElementNS(xmlns, "svg");
+  out.setAttributeNS(null, "viewBox", "0 0 24 24");
+  if (clazz) out.classList.add(...clazz.split(" "));
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttributeNS(null, "d", d);
+  out.appendChild(path);
+  return out;
+};
 
 export function waitForEl(selector: string) {
   return new Promise<Element>((resolve) => {

@@ -17,13 +17,11 @@ ipc.on("loaded", async () => {
   btnContent.className = "v-btn__content";
   btn.appendChild(btnContent);
 
-  const icon = document.createElement("span");
-  icon.className = "v-icon notranslate";
-  icon.innerHTML = svg(mdiThumbUpOutline, "v-icon__svg");
+  const icon = svg(mdiThumbUpOutline, "v-icon__svg");
   btnContent.appendChild(icon);
 
   btn.addEventListener("click", () => ipc.send("like"));
-  ipc.on("liked", () => (icon.innerHTML = svg(mdiThumbUp, "v-icon__svg")));
+  ipc.on("liked", () => icon.firstElementChild!.setAttributeNS(null, "d", mdiThumbUp));
 
   console.log("[Holodex+] Like button loaded");
 });
