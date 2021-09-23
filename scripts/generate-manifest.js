@@ -63,16 +63,7 @@ const plugin = ({ name, version, description, content, accessible, iconDir, perm
               run_at: "document_end",
             })),
             web_accessible_resources: accessible,
-            permissions: [
-              ...permissions,
-              "storage",
-              "activeTab",
-              "tabs",
-              "cookies",
-              "webRequest",
-              "webRequestBlocking",
-              ...content.map(({ matches }) => matches).flat(Infinity),
-            ],
+            permissions: [...permissions, ...content.map(({ matches }) => matches).flat(Infinity)],
             browser_action: {
               default_icon: { ...icons },
               default_popup: "popup/index.html",

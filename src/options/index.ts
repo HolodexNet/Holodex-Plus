@@ -1,16 +1,29 @@
-import { entries, Options, OptionsSchema, splitOnUpperCase } from "../util";
+import { entries, Options, OptionsSchema, OptionsDescription, splitOnUpperCase, svg } from "../util";
+import { mdiHelp } from "@mdi/js";
 
 (async () => {
   const form = document.getElementById("options") as HTMLFormElement;
 
-  for (const [name, type] of entries(OptionsSchema)) {
-    if (type === "boolean") {
+  for (const [name, defaultValue] of entries(OptionsSchema)) {
+    if (typeof defaultValue === "boolean") {
       const container = document.createElement("div");
 
       const text = document.createElement("span");
-      text.textContent = splitOnUpperCase(name)
-        .map((f, i) => (i === 0 ? f.substring(0, 1).toUpperCase() + f.substring(1) : f.toLowerCase()))
-        .join(" ");
+      text.appendChild(
+        new Text(
+          splitOnUpperCase(name)
+            .map((f, i) => (i === 0 ? f.substring(0, 1).toUpperCase() + f.substring(1) : f.toLowerCase()))
+            .join(" ")
+        )
+      );
+      if (OptionsDescription[name]) {
+        text.innerHTML += `
+          <div class="tooltip">
+            ${svg(mdiHelp, "help-icon tooltip-anchor")}
+            <div class="tooltip-text">${OptionsDescription[name]}</div>
+          </div>
+        `;
+      }
       container.appendChild(text);
 
       const switchContainer = document.createElement("div");

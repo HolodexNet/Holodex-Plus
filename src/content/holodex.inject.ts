@@ -1,8 +1,5 @@
-import { onThemeChange, waitForEl, ipc } from "src/util";
+import { onThemeChange, waitForEl, ipc, svg } from "../util";
 import { mdiThumbUpOutline, mdiThumbUp } from "@mdi/js";
-
-const svg = (path: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="v-icon__svg"><path d="${path}" /></svg>`;
 
 ipc.on("loaded", async () => {
   const container = await waitForEl(".watch-btn-group");
@@ -22,9 +19,11 @@ ipc.on("loaded", async () => {
 
   const icon = document.createElement("span");
   icon.className = "v-icon notranslate";
-  icon.innerHTML = svg(mdiThumbUpOutline);
+  icon.innerHTML = svg(mdiThumbUpOutline, "v-icon__svg");
   btnContent.appendChild(icon);
 
   btn.addEventListener("click", () => ipc.send("like"));
-  ipc.on("liked", () => (icon.innerHTML = svg(mdiThumbUp)));
+  ipc.on("liked", () => (icon.innerHTML = svg(mdiThumbUp, "v-icon__svg")));
+
+  console.log("[Holodex+] Like button loaded");
 });

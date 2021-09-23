@@ -1,4 +1,4 @@
-import { inject, ipc, sha1 } from "../util";
+import { inject, ipc, sha1, Options } from "../util";
 
 const videoId = window.location.pathname.split("/").slice(-1)[0];
 if (videoId) {
@@ -6,6 +6,8 @@ if (videoId) {
 }
 
 (async () => {
+  Options.get("remoteLikeButton").then((v) => console.log("remoteLikeButton:", v));
+  if (!(await Options.get("remoteLikeButton"))) return;
   async function getYtLikeData() {
     const doc = await fetch(`https://www.youtube.com/watch?v=${videoId}`).then((r) => r.text());
     const apiKey = doc.match(/"INNERTUBE_API_KEY":"(.*?)"/)?.[1];

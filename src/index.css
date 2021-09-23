@@ -11,6 +11,7 @@
   --brand-color-primary-dark: #1e1e1e;
   --brand-color-secondary: #603342;
   --brand-color-secondary-light: #f06292;
+  --brand-color-tertiary: #3b88d5;
   --text-color: #fff;
 }
 
@@ -44,6 +45,8 @@ div.options {
   font-size: 16px;
 
   width: 33%;
+
+  margin: 12px;
 }
 
 div.options > h3 {
@@ -55,6 +58,7 @@ div.options > h3 {
 div.options > form > div {
   display: flex;
   justify-content: space-between;
+  margin-top: 5px;
 }
 
 .switch {
@@ -103,4 +107,44 @@ div.options > form > div {
 .switch-input:checked + .switch-label::after {
   left: 22px;
   background-color: var(--brand-color-secondary-light);
+}
+
+svg.help-icon {
+  width: 14px;
+  border-radius: 100%;
+  background-color: var(--brand-color-secondary-light);
+  margin-left: 5px;
+}
+
+div.tooltip {
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+}
+
+div.tooltip-text {
+  width: 320px;
+  background-color: var(--brand-color-tertiary);
+  font-size: 12px;
+  padding: 3px;
+  border-radius: 6px;
+  z-index: 9999;
+
+  position: absolute;
+  left: -66666px;
+  top: -66666px;
+
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+div.tooltip > .tooltip-anchor:hover ~ div.tooltip-text,
+div.tooltip > .tooltip-anchor:focus ~ div.tooltip-text,
+div.tooltip > .tooltip-anchor:focus-within ~ div.tooltip-text {
+  opacity: 1;
+  left: 60%;
+  top: 18px;
 }
