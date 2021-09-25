@@ -1,10 +1,10 @@
-import { entries, Options, OptionsSchema, OptionsDescription, splitOnUpperCase, svg } from "../util";
+import { entries, Options, splitOnUpperCase, svg } from "../util";
 import { mdiHelp } from "@mdi/js";
 
 (async () => {
   const form = document.getElementById("options") as HTMLFormElement;
 
-  for (const [name, defaultValue] of entries(OptionsSchema)) {
+  for (const [name, defaultValue] of entries(Options.schema())) {
     if (typeof defaultValue === "boolean") {
       const container = document.createElement("div");
 
@@ -16,7 +16,8 @@ import { mdiHelp } from "@mdi/js";
             .join(" ")
         )
       );
-      if (OptionsDescription[name]) {
+      const desc = Options.description(name);
+      if (desc) {
         const tooltip = document.createElement("div");
         tooltip.className = "tooltip";
 
@@ -25,7 +26,7 @@ import { mdiHelp } from "@mdi/js";
 
         const tooltipText = document.createElement("div");
         tooltipText.className = "tooltip-text";
-        tooltipText.appendChild(new Text(OptionsDescription[name]));
+        tooltipText.appendChild(new Text(desc));
         tooltip.appendChild(tooltipText);
 
         text.appendChild(tooltip);
