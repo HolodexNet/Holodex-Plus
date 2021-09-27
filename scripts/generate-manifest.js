@@ -16,12 +16,13 @@ import fs from "fs-extra";
  * @property {ContentScript[]} content Mapping which determines which `script` is loaded in which `url`
  * @property {string[]} accessible Files which should be accessible from content scripts **relative to build directory**
  * @property {string} iconDir Icons used by the extension
+ * @property {string[]} permissions Extra permissions
  */
 
 /**
  * @type {(options: Options) => import("rollup").Plugin}
  */
-const plugin = ({ name, version, description, content, accessible, iconDir }) => {
+const plugin = ({ name, version, description, content, accessible, iconDir, permissions }) => {
   return {
     name: "generate-manifest",
     async generateBundle() {
@@ -53,6 +54,7 @@ const plugin = ({ name, version, description, content, accessible, iconDir }) =>
             icons,
             background: {
               page: "background/index.html",
+              persistent: true,
             },
             content_scripts: content.map(({ matches, path, allFrames }) => ({
               matches,
@@ -61,7 +63,7 @@ const plugin = ({ name, version, description, content, accessible, iconDir }) =>
               run_at: "document_end",
             })),
             web_accessible_resources: accessible,
-            permissions: ["storage", "activeTab", "tabs", "webRequest", "webRequestBlocking"],
+            permissions: [...permissions, ...content.map(({ matches }) => matches).flat(Infinity)],
             browser_action: {
               default_icon: { ...icons },
               default_popup: "popup/index.html",

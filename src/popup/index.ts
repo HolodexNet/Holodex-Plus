@@ -1,6 +1,3 @@
-import "../util";
-import browser from "webextension-polyfill";
+import { runtime } from "webextension-polyfill";
 
-console.log("Hello, popup");
-
-export {};
+document.getElementById("options")?.addEventListener("click", () => runtime.openOptionsPage());
