@@ -5,20 +5,9 @@ if (videoId) {
   inject("content/yt-player-overrides.inject.js");
 }
 
-type LikeCtx = {
-  apiKey: string;
-  context: any;
-  ytClientName: string;
-  ytClientVersion: string;
-  pageId: string;
-  likeParams: string;
-  removeLikeParams: string | undefined;
-  PAPISID: string;
-}
-
 (async () => {
   if (!(await Options.get("remoteLikeButton"))) return;
-  async function getYtLikeData() : Promise< LikeCtx | null> {
+  async function getYtLikeData() {
     const doc = await fetch(`https://www.youtube.com/watch?v=${videoId}`).then((r) => r.text());
     const apiKey = doc.match(/"INNERTUBE_API_KEY":"(.*?)"/)?.[1];
     const context = JSON.parse(
@@ -45,7 +34,8 @@ type LikeCtx = {
     return { apiKey, context, ytClientName, ytClientVersion, pageId, likeParams, removeLikeParams, PAPISID };
   }
 
-  async function like(ytLikeData: LikeCtx | null) {
+  async function like() {
+    const ytLikeData = await getYtLikeData();
     if (!ytLikeData) return false;
     const { apiKey, context, pageId, ytClientName, ytClientVersion, PAPISID, likeParams } = ytLikeData;
     const nowTime = Math.floor(Date.now() / 1000);
@@ -80,6 +70,6 @@ type LikeCtx = {
     return false;
   }
 
-  ipc.on("like", async () => (await like(await getYtLikeData())) ? ipc.send("liked") : ipc.send("failed"));
-  // ipc.send("loaded");
+  ipc.on("like", async () => ((await like()) ? ipc.send("liked") : ipc.send("failed")));
+  ipc.send("loaded");
 })();

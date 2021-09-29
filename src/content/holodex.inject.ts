@@ -1,11 +1,7 @@
 import { onThemeChange, waitForEl, ipc, svg } from "../util";
 import { mdiThumbUpOutline, mdiThumbUp } from "@mdi/js";
 
-// ipc.on("loaded", 
-(async () => {
-  const container = await waitForEl(".watch-btn-group");
-  if (!container) return;
-
+function injectLikeButton(container: Element) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = `v-btn v-btn--icon v-btn--round v-size--default ${
@@ -25,4 +21,9 @@ import { mdiThumbUpOutline, mdiThumbUp } from "@mdi/js";
   ipc.on("liked", () => icon.firstElementChild!.setAttributeNS(null, "d", mdiThumbUp));
 
   console.log("[Holodex+] Like button loaded");
-})();
+}
+
+ipc.on("loaded", async () => {
+  const container = await waitForEl(".watch-btn-group");
+  if (container) injectLikeButton(container);
+});
