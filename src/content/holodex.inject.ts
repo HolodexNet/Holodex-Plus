@@ -1,7 +1,8 @@
 import { onThemeChange, waitForEl, ipc, svg } from "../util";
 import { mdiThumbUpOutline, mdiThumbUp } from "@mdi/js";
 
-ipc.on("loaded", async () => {
+// ipc.on("loaded", 
+(async () => {
   const container = await waitForEl(".watch-btn-group");
   if (!container) return;
 
@@ -24,4 +25,4 @@ ipc.on("loaded", async () => {
   ipc.on("liked", () => icon.firstElementChild!.setAttributeNS(null, "d", mdiThumbUp));
 
   console.log("[Holodex+] Like button loaded");
-});
+})();
