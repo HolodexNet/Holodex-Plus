@@ -1,5 +1,7 @@
-import { onThemeChange, waitForEl, ipc, svg } from "../util";
+import { onThemeChange, waitForEl, ipc, svg, inject } from "../util";
 import { mdiThumbUpOutline, mdiThumbUp } from "@mdi/js";
+
+inject("content/holodex-flag.inject.js");
 
 function injectLikeButton(container: Element) {
   const btn = document.createElement("button");
@@ -26,4 +28,6 @@ function injectLikeButton(container: Element) {
 ipc.on("loaded", async () => {
   const container = await waitForEl(".watch-btn-group");
   if (container) injectLikeButton(container);
+
+  // await injectArchiveChat();
 });

@@ -1,15 +1,38 @@
 import { ipc } from "src/util";
 import { webRequest, runtime } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
+import { rtc } from "masterchat";
 
 ipc.setupProxy();
 
 // Allows all of youtube to be iframed (mainly used for Archive Chat)
 webRequest.onHeadersReceived.addListener(
-  (details) => ({
-    responseHeaders: details?.responseHeaders?.filter((header) => header.name.toLowerCase() !== "x-frame-options"),
-  }),
-  { urls: ["*://*.youtube.com/*"] },
+  (details) => {
+    console.log("bg,", details);
+    const q = new URL(details.url);
+    const videoId = q.searchParams.get("v");
+    const channelId = q.searchParams.get("c");
+    console.log(videoId, channelId);
+    const continuation = videoId && channelId && rtc({
+      videoId,
+      channelId,
+   });
+    console.log(continuation);
+    return {
+      redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}`,
+    }
+  },
+  { urls: ["*://*.holodex.net/live_chat_replay?*", "*://localhost/live_chat_replay?*"] },
+  ["blocking", "responseHeaders"]
+);
+
+webRequest.onHeadersReceived.addListener(
+  (details) => {
+    return {
+      responseHeaders: details?.responseHeaders?.filter((header) => header.name.toLowerCase() !== "x-frame-options"),
+    }
+  },
+  { urls: ["*://*.youtube.com/live_chat_replay?*"] },
   ["blocking", "responseHeaders"]
 );
 
