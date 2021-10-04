@@ -8,14 +8,11 @@ import { terser } from "rollup-plugin-terser";
 import { sync as glob } from "glob";
 import path from "path";
 import clean from "./scripts/clean";
-import nodePolyfills from "rollup-plugin-polyfill-node";
-
 const sharedPlugins = [
   typescript({ typescript: require("typescript") }),
-  nodePolyfills(),
   // resolve + commonjs cause dependencies to be bundled with the code
   // instead of as external chunks
-  resolve({ preferBuiltins: false }),
+  resolve(),
   commonjs(),
   terser({ ecma: 2020 }),
 ];

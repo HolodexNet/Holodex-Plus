@@ -52,5 +52,12 @@ function enableElementPool() {
   console.info("[Holodex+]", "enableElementPool: element pool enabled");
 }
 
+// Re-emit events from wrong origins
+window.addEventListener("message", (event) => {
+  if(event.origin.match(/(localhost|holodex.net)/)) {
+    window.postMessage(event.data, "*");
+  }
+}, false);
+
 fixSchedulerLeak();
 enableElementPool();

@@ -4,7 +4,6 @@ import type { Runtime } from "webextension-polyfill";
 import { rtc } from "masterchat";
 
 ipc.setupProxy();
-
 // Allows all of youtube to be iframed (mainly used for Archive Chat)
 webRequest.onHeadersReceived.addListener(
   (details) => {
@@ -12,12 +11,11 @@ webRequest.onHeadersReceived.addListener(
     const q = new URL(details.url);
     const videoId = q.searchParams.get("v");
     const channelId = q.searchParams.get("c");
-    console.log(videoId, channelId);
     const continuation = videoId && channelId && rtc({
       videoId,
       channelId,
    });
-    console.log(continuation);
+    console.log(`https://www.youtube.com/live_chat_replay?continuation=${continuation}`);
     return {
       redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}`,
     }
