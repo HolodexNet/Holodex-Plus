@@ -10,13 +10,16 @@ webRequest.onHeadersReceived.addListener(
     const q = new URL(details.url);
     const videoId = q.searchParams.get("v");
     const channelId = q.searchParams.get("c");
-    const continuation = videoId && channelId && rrc({
-      videoId,
-      channelId,
-   });
+    const continuation =
+      videoId &&
+      channelId &&
+      rrc({
+        videoId,
+        channelId,
+      });
     return {
       redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}`,
-    }
+    };
   },
   { urls: ["https://www.youtube.com/redirect_replay_chat?*"] },
   ["blocking", "responseHeaders"]
@@ -26,7 +29,7 @@ webRequest.onHeadersReceived.addListener(
   (details) => {
     return {
       responseHeaders: details?.responseHeaders?.filter((header) => header.name.toLowerCase() !== "x-frame-options"),
-    }
+    };
   },
   { urls: ["*://*.youtube.com/live_chat_replay?*"] },
   ["blocking", "responseHeaders"]

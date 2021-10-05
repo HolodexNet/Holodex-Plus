@@ -8,6 +8,7 @@ import { terser } from "rollup-plugin-terser";
 import { sync as glob } from "glob";
 import path from "path";
 import clean from "./scripts/clean";
+
 const sharedPlugins = [
   typescript({ typescript: require("typescript") }),
   // resolve + commonjs cause dependencies to be bundled with the code
