@@ -11,6 +11,8 @@
     "dist": "web-ext build -s build -a dist",
     "format": "pretty-quick",
     "lint": "web-ext lint -s build",
+    "predist": "yarn build",
+    "prelint": "yarn build",
     "prepare": "husky install"
   },
   "dependencies": {
