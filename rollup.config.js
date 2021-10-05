@@ -43,7 +43,7 @@ const options = [
         version: pkg.version,
         description: pkg.description,
         content: [
-          { matches: ["*://*.holodex.net/watch/*", "*://*.localhost/watch/*"], path: "content/holodex.inject.js" },
+          { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], path: "content/holodex.inject.js" },
           { matches: ["*://*.youtube.com/embed/*"], path: "content/yt-player.inject.js", allFrames: true },
           { matches: ["*://*.youtube.com/live_chat*"], path: "content/yt-chat.inject.js", allFrames: true },
         ],
