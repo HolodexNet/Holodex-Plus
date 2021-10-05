@@ -13,6 +13,12 @@ yarn dev:firefox
 yarn dev:chrome
 ```
 
+## Distribution
+
+### Firefox
+
+- [web-ext sign](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-sign)
+
 ## References
 
 - [mozilla/web-ext: A command line tool to help build, run, and test web extensions](https://github.com/mozilla/web-ext)
