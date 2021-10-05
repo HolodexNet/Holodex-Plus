@@ -20,7 +20,7 @@ webRequest.onHeadersReceived.addListener(
       redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}`,
     }
   },
-  { urls: ["*://*.holodex.net/live_chat_replay?*", "*://localhost/live_chat_replay?*"] },
+  { urls: ["https://www.youtube.com/redirect_replay_chat?*"] },
   ["blocking", "responseHeaders"]
 );
 
