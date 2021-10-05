@@ -1,7 +1,7 @@
 import { ipc } from "src/util";
 import { webRequest, runtime } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
-import { rtc } from "masterchat";
+import { rrc } from "masterchat";
 
 ipc.setupProxy();
 // Allows all of youtube to be iframed (mainly used for Archive Chat)
@@ -11,7 +11,7 @@ webRequest.onHeadersReceived.addListener(
     const q = new URL(details.url);
     const videoId = q.searchParams.get("v");
     const channelId = q.searchParams.get("c");
-    const continuation = videoId && channelId && rtc({
+    const continuation = videoId && channelId && rrc({
       videoId,
       channelId,
    });
