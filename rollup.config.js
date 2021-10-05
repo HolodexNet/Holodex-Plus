@@ -12,7 +12,9 @@ const sharedPlugins = [
   typescript({ typescript: require("typescript") }),
   // resolve + commonjs cause dependencies to be bundled with the code
   // instead of as external chunks
-  resolve(),
+  resolve({
+    browser: true,
+  }),
   commonjs(),
   terser({ ecma: 2020 }),
 ];
@@ -45,7 +47,11 @@ const options = [
           { matches: ["*://*.youtube.com/embed/*"], path: "content/yt-player.inject.js", allFrames: true },
           { matches: ["*://*.youtube.com/live_chat*"], path: "content/yt-chat.inject.js", allFrames: true },
         ],
-        accessible: ["content/yt-player-overrides.inject.js", "content/yt-chat-overrides.inject.js", "content/holodex-flag.inject.js"],
+        accessible: [
+          "content/yt-player-overrides.inject.js",
+          "content/yt-chat-overrides.inject.js",
+          "content/holodex-flag.inject.js",
+        ],
         iconDir: "src/icons",
         permissions: ["storage", "webRequest", "webRequestBlocking"],
       }),
