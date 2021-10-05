@@ -4,8 +4,13 @@
 
 ```bash
 yarn install
-yarn dev # => build TypeScript into ./build
-yarn dev:firefox # => open a clean-room firefox instance with the extension loaded. It will automatically be reloaded when the files inside ./build changed
+
+# watch and build TypeScript into ./build
+yarn dev
+
+# open a browser with the extension loaded. It will automatically be reloaded when the files inside ./build changed
+yarn dev:firefox
+yarn dev:chrome
 ```
 
 ## References

@@ -6,6 +6,7 @@
     "build": "rollup -c",
     "clean": "rimraf build dist",
     "dev": "rollup -c --watch",
+    "dev:chrome": "web-ext run -s build -t chromium",
     "dev:firefox": "web-ext run -s build",
     "dist": "web-ext build -s build -a dist",
     "format": "pretty-quick",
