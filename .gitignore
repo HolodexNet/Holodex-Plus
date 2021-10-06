@@ -1,6 +1,4 @@
-.snowpack
-build
-dist
+/build
+/dist
 node_modules
-.husky
 yarn-error.log

@@ -1,7 +1,7 @@
 // @ts-check
 
 import path from "path";
-import fs from "fs-extra";
+import fs from "fs/promises";
 
 /**
  * @typedef ContentScript
