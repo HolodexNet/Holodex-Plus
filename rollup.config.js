@@ -2,8 +2,7 @@ import typescript from "rollup-plugin-typescript2";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import html from "@web/rollup-plugin-html";
-import manifest from "./scripts/generate-manifest";
-import pkg from "./package.json";
+import bundleExtension from "./scripts/rollup-bundle-extension";
 import { terser } from "rollup-plugin-terser";
 import { sync as glob } from "glob";
 import path from "path";
@@ -39,26 +38,12 @@ const options = [
         flattenOutput: false,
         input: ["background/index.html", "options/index.html", "popup/index.html"],
       }),
-      manifest({
-        name: "Holodex Plus",
-        version: pkg.version,
-        description: pkg.description,
-        content: [
-          { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], path: "content/holodex.inject.js" },
-          { matches: ["*://*.youtube.com/embed/*"], path: "content/yt-player.inject.js", allFrames: true },
-          { matches: ["*://*.youtube.com/live_chat*"], path: "content/yt-chat.inject.js", allFrames: true },
-        ],
-        accessible: [
-          "content/yt-player-overrides.inject.js",
-          "content/yt-chat-overrides.inject.js",
-          "content/holodex-flag.inject.js",
-        ],
-        iconDir: "src/icons",
-        permissions: ["storage", "webRequest", "webRequestBlocking"],
-      }),
+      bundleExtension(
+        { iconDir: "src/icons" },
+      ),
     ],
   },
-  ...glob("src/content/**/*.inject.ts").map(content),
+  ...glob("src/content/**/*.ts").map(content),
 ];
 
 export default options;

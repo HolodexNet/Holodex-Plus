@@ -1,4 +1,7 @@
-import { inject, ipc, sha1, Options } from "../util";
+import { runtime } from "webextension-polyfill";
+import { inject, ipc, Options, sha1 } from "../util";
+
+inject("content/yt-player-overrides.inject.js");
 
 const videoId = window.location.pathname.split("/").slice(-1)[0];
 if (videoId) {
@@ -25,7 +28,7 @@ if (videoId) {
       Object.keys(context).length === 0 ||
       !ytClientName ||
       !ytClientVersion ||
-      !pageId ||
+      // !pageId ||
       !likeParams ||
       !PAPISID
     ) {
@@ -46,7 +49,7 @@ if (videoId) {
           "Content-Type": "application/json",
           "X-Goog-AuthUser": "0",
           "X-Goog-Visitor-Id": context.client.visitorData,
-          "X-Goog-PageId": pageId,
+          // "X-Goog-PageId": pageId,
           "X-Youtube-Client-Name": ytClientName,
           "X-Youtube-Client-Version": ytClientVersion,
           "X-Origin": "https://www.youtube.com",
@@ -69,7 +72,5 @@ if (videoId) {
     }
     return false;
   }
-
   ipc.on("like", async () => ((await like()) ? ipc.send("liked") : ipc.send("failed")));
-  ipc.send("loaded");
 })();

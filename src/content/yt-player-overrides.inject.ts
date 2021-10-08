@@ -1,3 +1,6 @@
+import { Options } from "src/util";
+import { storage } from "webextension-polyfill";
+
 console.log("[Holodex+]", "Setting YT player overrides");
 
 // List of flags and desired values
@@ -36,7 +39,6 @@ const overrides: Record<string, string> = {
 
 // @ts-ignore
 const cfg = window.ytcfg;
-const id = window.location.pathname.split("/").slice(-1)[0];
 
 if (!cfg) {
   console.warn("[Holodex+]", "disablePlayability: ytcfg is missing");

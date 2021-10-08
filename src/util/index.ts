@@ -94,23 +94,23 @@ export function waitForEl(selector: string) {
   });
 }
 
-type ThemeChangeCallback = (theme: "theme--dark" | "theme--light") => void;
-let themeChangeListeners = new Set<ThemeChangeCallback>();
+// type ThemeChangeCallback = (theme: "theme--dark" | "theme--light") => void;
+// let themeChangeListeners = new Set<ThemeChangeCallback>();
 /**
  * Calls `callback` when theme (dark/light) is toggled.
  */
-export function onThemeChange(callback: ThemeChangeCallback) {
-  themeChangeListeners.add(callback);
-}
+// export function onThemeChange(callback: ThemeChangeCallback) {
+//   themeChangeListeners.add(callback);
+// }
 
-waitForEl("#app").then((root) => {
-  new MutationObserver(() => {
-    const theme: "theme--dark" | "theme--light" = root.classList.contains("theme--dark")
-      ? "theme--dark"
-      : "theme--light";
-    themeChangeListeners.forEach((f) => f(theme));
-  }).observe(root, { attributes: true, attributeFilter: ["class"] });
-});
+// waitForEl("#app").then((root) => {
+//   new MutationObserver(() => {
+//     const theme: "theme--dark" | "theme--light" = root.classList.contains("theme--dark")
+//       ? "theme--dark"
+//       : "theme--light";
+//     themeChangeListeners.forEach((f) => f(theme));
+//   }).observe(root, { attributes: true, attributeFilter: ["class"] });
+// });
 
 export * from "./storage";
 import * as ipc from "./ipc";
