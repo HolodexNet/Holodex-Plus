@@ -53,6 +53,9 @@ async function like() {
   try {
     const res = await fetch(`https://www.youtube.com/youtubei/v1/like/like?key=${apiKey}`, {
       method: "POST",
+      referrer: `https://youtube.com/watch?v=${videoId}`,
+      mode: "same-origin",
+      referrerPolicy: "origin-when-cross-origin",
       headers: {
         "Content-Type": "application/json",
         "X-Goog-AuthUser": "0",
