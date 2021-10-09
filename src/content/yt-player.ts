@@ -60,7 +60,7 @@ async function like() {
         "Content-Type": "application/json",
         "X-Goog-AuthUser": "0",
         "X-Goog-Visitor-Id": context.client.visitorData,
-        // "X-Goog-PageId": pageId,
+        ...pageId && { "X-Goog-PageId": pageId },
         "X-Youtube-Client-Name": ytClientName,
         "X-Youtube-Client-Version": ytClientVersion,
         "X-Origin": "https://www.youtube.com",
