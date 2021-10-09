@@ -1,6 +1,3 @@
-import { Options } from "src/util";
-import { storage } from "webextension-polyfill";
-
 console.log("[Holodex+]", "Setting YT player overrides");
 
 // List of flags and desired values

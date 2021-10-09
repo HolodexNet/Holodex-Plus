@@ -60,23 +60,3 @@ getBrowserInfo().then((info) => {
     );
   }
 });
-
-export const MESSAGE_TYPES = {
-  TOKEN: "token",
-  FAVORITES: "favorites",
-  LIKEREQUEST: "likerequest",
-};
-
-runtime.onMessageExternal.addListener((request, sender) => {
-  if (!sender?.url?.match(/(localhost|holodex.net)/)) {
-    return;
-  }
-
-  if (request.message === MESSAGE_TYPES.LIKEREQUEST) {
-    const videoId = request.videoId;
-    // TODO: the data field here is ignored, and instead looks at the url for videoId 
-    console.log("[Holodex+] Liking video: ", videoId);
-    if(sender.tab?.id)
-      tabs.sendMessage(sender.tab.id, { topic: "like" });
-  }
-});

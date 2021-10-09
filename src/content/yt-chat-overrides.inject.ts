@@ -1,5 +1,7 @@
 // https://greasyfork.org/en/scripts/422206-workaround-for-youtube-chat-memory-leaks/code
 
+import { validOrigin } from "src/util";
+
 // @ts-ignore
 const ytglobal = window.ytglobal;
 // @ts-ignore
@@ -54,7 +56,7 @@ function enableElementPool() {
 
 // Re-emit events from wrong origins
 window.addEventListener("message", (event) => {
-  if(event.origin.match(/(localhost|holodex.net)/)) {
+  if(validOrigin(event.origin)) {
     window.postMessage(event.data, "*");
   }
 }, false);

@@ -13,10 +13,6 @@ const web_accessible_resources = [
   "content/yt-chat-overrides.inject.js",
   "content/holodex-flag.inject.js",
 ];
-
-const externally_connectable = {
-  "matches": ["*://*.holodex.net/*", "*://localhost/*"]
-};
 const permissions = ["storage", "webRequest", "webRequestBlocking"];
 const name = "Holodex Plus";
 
@@ -50,7 +46,6 @@ export default ({ icons }) => (
           page: "options/index.html",
           open_in_tab: true,
         },
-        externally_connectable,
       },
       null,
       2

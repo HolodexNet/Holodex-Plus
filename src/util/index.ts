@@ -94,6 +94,9 @@ export function waitForEl(selector: string) {
   });
 }
 
+export function validOrigin(origin: string) {
+  return origin.match(/^https?:\/\/(localhost:|(\S+\.)?holodex\.net)/i);
+}
 // type ThemeChangeCallback = (theme: "theme--dark" | "theme--light") => void;
 // let themeChangeListeners = new Set<ThemeChangeCallback>();
 /**
