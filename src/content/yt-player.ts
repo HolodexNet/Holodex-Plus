@@ -12,6 +12,9 @@ window.addEventListener("message", async (event) => {
       const res = await like();
       res ? ipc.send("liked") : ipc.send("failed");
     }
+    // else {
+    //   console.log(event);
+    // }
   }
 });
 

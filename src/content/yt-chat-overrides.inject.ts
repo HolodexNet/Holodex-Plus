@@ -1,7 +1,5 @@
 // https://greasyfork.org/en/scripts/422206-workaround-for-youtube-chat-memory-leaks/code
 
-import { validOrigin } from "src/util";
-
 // @ts-ignore
 const ytglobal = window.ytglobal;
 // @ts-ignore
@@ -53,13 +51,6 @@ function enableElementPool() {
   ytcfg.set("ELEMENT_POOL_DEFAULT_CAP", 75);
   console.info("[Holodex+]", "enableElementPool: element pool enabled");
 }
-
-// Re-emit events from wrong origins
-window.addEventListener("message", (event) => {
-  if(validOrigin(event.origin)) {
-    window.postMessage(event.data, "*");
-  }
-}, false);
 
 fixSchedulerLeak();
 enableElementPool();
