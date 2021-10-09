@@ -1,15 +1,14 @@
-# Holodex-Plus
+# Holodex+
 
-Holodex.net Companion Extension
+Holodex Companion Extension.
 
 ### Local development (Chrome)
 
+```bash
+yarn
+yarn dev # watch ts files
+yarn dev:chrome # launch chrome
 ```
-$ yarn
-$ yarn dev
-```
-
-Then go into [`chrome://extensions`](chrome://extensions), and `Load unpacked` -> Select this project's `build` folder.
 
 Hot refresh doesn't exist, but the files are watched and re-built when changed. To see your changes
 
@@ -27,12 +26,11 @@ To open devtools for:
 
 ### Local development (Firefox)
 
+```bash
+yarn
+yarn dev # watch ts files
+yarn dev:firefox # launch firefox
 ```
-$ yarn
-$ yarn dev
-```
-
-Navigate to [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox), and `Load Temporary Add-on...` -> Select the `manifest.json` file inside of this project's `build` folder.
 
 Reloading works the same way as in Chrome, but devtools works a bit differently from Chrome. `popup`, `background`, and `options` all output their content into the same inspection tool available through [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox) -> `Inspect`.
 
