@@ -24,9 +24,15 @@
 }
 
 .yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(1) {
-  fill: #F06292;
+  fill: #f06292;
 }
 
 .yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(2) {
-  stroke: #5DA2F2;
+  stroke: #5da2f2;
+}
+
+@media screen and (max-width: 1200px) {
+  .yt-watch-holodex-label {
+    display: none;
+  }
 }
