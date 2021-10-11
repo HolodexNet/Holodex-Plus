@@ -7,9 +7,10 @@ const content_scripts = [
   { matches: ["*://*.youtube.com/embed/*"], js: ["content/yt-player.js"], allFrames: true },
   { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js"], allFrames: true },
   { 
-    matches: ["*://*.youtube.com/watch*"], 
+    matches: ["*://*.youtube.com/*" ], 
     js: ["content/yt-watch.js"],
-    css: ["content/style/yt-watch.css"]
+    css: ["content/style/yt-watch.css"],
+    run_at: "document_idle"
   },
 ];
 
