@@ -3,9 +3,9 @@
 import pkg from "../package.json";
 
 const content_scripts = [
-  { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], js: ["content/holodex.js"] },
-  { matches: ["*://*.youtube.com/embed/*"], js: ["content/yt-player.js"], allFrames: true },
-  { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js"], allFrames: true },
+  { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], js: ["content/holodex.js"], run_at: "document_end" },
+  { matches: ["*://*.youtube.com/embed/*"], js: ["content/yt-player.js"], all_frames: true, run_at: "document_end" },
+  { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js"], all_frames: true, run_at: "document_end" },
   {
     matches: ["*://*.youtube.com/*"],
     run_at: "document_start",
