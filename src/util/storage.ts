@@ -5,6 +5,7 @@ const schema = {
   // key: default-value
   liveChatMemoryLeakFix: true,
   remoteLikeButton: true,
+  openInHolodexButton: true
 };
 type Schema = typeof schema;
 const descriptions: Partial<Record<keyof Schema, string>> = {

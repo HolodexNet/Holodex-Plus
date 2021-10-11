@@ -7,6 +7,7 @@ import { terser } from "rollup-plugin-terser";
 import { sync as glob } from "glob";
 import path from "path";
 import clean from "./scripts/clean";
+import copy from "rollup-plugin-copy";
 
 const sharedPlugins = [
   typescript({ typescript: require("typescript") }),
@@ -41,6 +42,11 @@ const options = [
       bundleExtension(
         { iconDir: "src/icons" },
       ),
+      copy({
+        targets: [
+          { src: "src/content/style/*.css", dest: "build/content/style" }
+        ]
+      }),
     ],
   },
   ...glob("src/content/**/*.ts").map(content),

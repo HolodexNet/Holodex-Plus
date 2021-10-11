@@ -2,10 +2,15 @@
 
 import pkg from "../package.json";
 
-const content = [
-  { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], path: "content/holodex.js" },
-  { matches: ["*://*.youtube.com/embed/*"], path: "content/yt-player.js", allFrames: true },
-  { matches: ["*://*.youtube.com/live_chat*"], path: "content/yt-chat.js", allFrames: true },
+const content_scripts = [
+  { matches: ["*://*.holodex.net/*", "*://*.localhost/*"], js: ["content/holodex.js"] },
+  { matches: ["*://*.youtube.com/embed/*"], js: ["content/yt-player.js"], allFrames: true },
+  { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js"], allFrames: true },
+  { 
+    matches: ["*://*.youtube.com/watch*"], 
+    js: ["content/yt-watch.js"],
+    css: ["content/style/yt-watch.css"]
+  },
 ];
 
 const web_accessible_resources = [
@@ -13,7 +18,8 @@ const web_accessible_resources = [
   "content/yt-chat-overrides.inject.js",
   "content/holodex-flag.inject.js",
 ];
-const permissions = ["storage", "webRequest", "webRequestBlocking"];
+const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*"];
+const permissions = ["storage", "webRequest", "webRequestBlocking", ...hosts];
 const name = "Holodex Plus";
 
 export default ({ icons }) => (
@@ -28,14 +34,9 @@ export default ({ icons }) => (
           page: "background/index.html",
           persistent: true,
         },
-        content_scripts: content.map(({ matches, path, allFrames }) => ({
-          matches,
-          js: [path],
-          all_frames: Boolean(allFrames),
-          run_at: "document_end",
-        })),
+        content_scripts,
         web_accessible_resources,
-        permissions: [...permissions, ...content.map(({ matches }) => matches).flat(Infinity)],
+        permissions,
         browser_action: {
           default_icon: { ...icons },
           default_popup: "popup/index.html",
