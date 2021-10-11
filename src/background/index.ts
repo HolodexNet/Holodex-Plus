@@ -60,3 +60,9 @@ getBrowserInfo().then((info) => {
     );
   }
 });
+
+tabs.onUpdated.addListener(function (tabId, info, tab) {
+  if (tab.url?.startsWith("https://www.youtube.com/watch")) {
+    if (info.status === "complete") tabs.sendMessage(tabId, { command: "loaded" });
+  }
+});
