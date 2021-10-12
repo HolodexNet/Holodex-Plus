@@ -1,4 +1,4 @@
-# Holodex+
+# <img src="src/icons/holodex-plus-icon.png" width="48"> Holodex+
 
 Holodex Companion Extension.
 
