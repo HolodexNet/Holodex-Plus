@@ -10,7 +10,7 @@ const icon3 = `
 
 let served = false;
 
-function openHolodex(e: Event) {
+function openHolodex() {
   const currentUrl = new URL(window.location.href);
   const videoID = currentUrl.searchParams.get("v");
   const t = currentUrl.searchParams.get("t");
@@ -44,7 +44,7 @@ function inject(target: Element) {
 async function init() {
   if (!(await Options.get("openInHolodexButton"))) return;
 
-  const onMutation = (mutations: MutationRecord[], observer: MutationObserver) => {
+  const onMutation = (mutations: MutationRecord[]) => {
     if (served) return;
 
     for (const mutation of mutations) {
