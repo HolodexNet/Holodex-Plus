@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@mdi/js": "^6.1.95",
+    "masterchat": "^0.13.0",
     "rollup-plugin-copy": "^3.4.0",
     "webextension-polyfill": "^0.8.0"
   },
