@@ -5,6 +5,15 @@ const ytglobal = window.ytglobal;
 // @ts-ignore
 const ytcfg = window.ytcfg;
 
+// Fix theme not following query param on archive chat
+const params = new URLSearchParams(window.location.search);
+if(params.get("dark_theme") === "1") {
+  document.querySelector("html")?.setAttribute("dark", "");
+}
+else {
+  document.querySelector("html")?.removeAttribute("dark");
+}
+
 /*
  * Currently (2021-02-23), youtube live chat has a bug that never execute some scheduled tasks.
  * Those tasks are scheduled for each time a new message is added to the chat and hold the memory until being executed.

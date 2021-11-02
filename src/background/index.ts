@@ -10,6 +10,7 @@ webRequest.onHeadersReceived.addListener(
     const q = new URL(details.url);
     const videoId = q.searchParams.get("v");
     const channelId = q.searchParams.get("c");
+    const darkTheme = q.searchParams.get("dark_theme") ?? 0;
     const continuation =
       videoId &&
       channelId &&
@@ -18,7 +19,7 @@ webRequest.onHeadersReceived.addListener(
         channelId,
       });
     return {
-      redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}`,
+      redirectUrl: `https://www.youtube.com/live_chat_replay?continuation=${continuation}&dark_theme=${darkTheme}`,
     };
   },
   { urls: ["https://www.youtube.com/redirect_replay_chat?*"] },
