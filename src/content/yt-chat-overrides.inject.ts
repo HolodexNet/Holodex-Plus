@@ -10,7 +10,7 @@ const params = new URLSearchParams(window.location.search);
 if(params.get("dark_theme") === "1") {
   document.querySelector("html")?.setAttribute("dark", "");
 }
-else {
+else if(params.get("dark_theme") === "0") {
   document.querySelector("html")?.removeAttribute("dark");
 }
 
