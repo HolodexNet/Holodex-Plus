@@ -5,7 +5,8 @@ import pkg from "../package.json";
 const content_scripts = [
   { matches: ["*://*.holodex.net/*"], js: ["content/holodex.js"], run_at: "document_end" },
   { matches: ["*://*.youtube.com/embed/*"], js: ["content/yt-player.js"], all_frames: true, run_at: "document_end" },
-  { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js"], all_frames: true, run_at: "document_end" },
+  { matches: ["*://*.youtube.com/live_chat*"], js: ["content/yt-chat.js", "content/yt-chat-tlsync.js"], all_frames: true, run_at: "document_end" },
+  { matches: ["*://*.twitch.tv/embed/*/chat?*"], js: ["content/twitch-chat-tlsync.js"], all_frames: true, run_at: "document_end" },
   {
     matches: ["*://*.youtube.com/*"],
     run_at: "document_start",
@@ -17,9 +18,11 @@ const content_scripts = [
 const web_accessible_resources = [
   "content/yt-player-overrides.inject.js",
   "content/yt-chat-overrides.inject.js",
+  "content/yt-chat-tlsync.inject.js",
+  "content/twitch-chat-tlsync.inject.js",
   "content/holodex-flag.inject.js",
 ];
-const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*"];
+const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*", "*://*.twitch.tv/*"];
 const permissions = ["storage", "webRequest", "webRequestBlocking", ...hosts];
 const name = "Holodex Plus";
 
