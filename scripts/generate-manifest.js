@@ -13,6 +13,9 @@ const content_scripts = [
     js: ["content/yt-watch.js"],
     css: ["content/style/yt-watch.css"],
   },
+  { matches: ["*://*.twitcasting.tv/*/embeddedplayer/*"], js: ["content/twitcast-embed-player.js"], all_frames: true, run_at: "document_end" },
+  { matches: ["*://embed.nicovideo.jp/watch/*"], js: ["content/niconico-embed-player.js"], all_frames: true, run_at: "document_end" },
+  { matches: ["*://player.bilibili.com/player.html*"], js: ["content/bilibili-embed-player.js"], all_frames: true, run_at: "document_end" },
 ];
 
 const web_accessible_resources = [
@@ -22,7 +25,7 @@ const web_accessible_resources = [
   "content/twitch-chat-tlsync.inject.js",
   "content/holodex-flag.inject.js",
 ];
-const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*", "*://*.twitch.tv/*"];
+const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*", "*://*.twitch.tv/*", "*://*.twitcasting.tv/*", "*://embed.nicovideo.jp/*","*://player.bilibili.com/*"];
 const permissions = ["storage", "webRequest", "webRequestBlocking", ...hosts];
 const name = "Holodex Plus";
 
