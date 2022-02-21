@@ -75,7 +75,7 @@ async function like() {
         params: likeParams,
       }),
     }).then(async (r) => ({ status: r.status, body: await r.text() }));
-    if (res.status === 200 && res.body.includes("Added to Liked videos")) {
+    if (res.status === 200) {
       return true;
     }
   } catch (e) {

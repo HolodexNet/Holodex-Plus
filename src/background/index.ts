@@ -1,5 +1,5 @@
-import { ipc } from "src/util";
-import { webRequest, runtime, tabs } from "webextension-polyfill";
+import { ipc, VIDEO_URL_REGEX } from "src/util";
+import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
 import { rrc } from "masterchat";
 
@@ -69,4 +69,17 @@ tabs.onUpdated.addListener(function (tabId, info, tab) {
   if (tab.url?.startsWith("https://www.youtube.com/watch")) {
     if (info.status === "complete") tabs.sendMessage(tabId, { command: "loaded" });
   }
+});
+
+
+browserAction.onClicked.addListener(async function(activeTab, info)
+{
+    // Clicking on icon opens holodex
+    const urlMatch = activeTab.url?.match(VIDEO_URL_REGEX);
+    if(urlMatch?.[5]) {
+      tabs.create({ url: `https://holodex.net/watch/${urlMatch?.[5]}` });
+    }
+    else {
+      tabs.create({ url: "https://holodex.net" });
+    }
 });

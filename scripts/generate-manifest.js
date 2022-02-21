@@ -25,8 +25,9 @@ const web_accessible_resources = [
   "content/twitch-chat-tlsync.inject.js",
   "content/holodex-flag.inject.js",
 ];
+
 const hosts = ["*://*.youtube.com/*", "*://*.holodex.net/*", "*://*.twitch.tv/*", "*://*.twitcasting.tv/*", "*://embed.nicovideo.jp/*","*://player.bilibili.com/*"];
-const permissions = ["storage", "webRequest", "webRequestBlocking", ...hosts];
+const permissions = ["tabs", "storage", "webRequest", "webRequestBlocking", ...hosts];
 const name = "Holodex Plus";
 
 export default ({ icons }) =>
@@ -46,8 +47,8 @@ export default ({ icons }) =>
       permissions,
       browser_action: {
         default_icon: { ...icons },
-        default_popup: "popup/index.html",
-        default_title: name,
+        // default_popup: "popup/index.html",
+        default_title: "Open in Holodex",
       },
       options_ui: {
         browser_style: true,
