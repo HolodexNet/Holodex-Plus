@@ -2,6 +2,9 @@
 
 Holodex Companion Extension.
 
+
+### [Changelog](https://github.com/HolodexNet/Holodex-Plus/blob/dev/CHANGELOG.md)
+
 ### Local development (Chrome)
 
 ```bash
