@@ -1,5 +1,7 @@
 import { runtime } from "webextension-polyfill";
 
+export const VIDEO_URL_REGEX = /((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be|holodex.net))(\/(?:[\w\-]+\?v=|embed\/|v\/|watch\/)?)([\w\-]+)(\S+)?/i;
+
 /**
  * Inject a script onto the page. Script must be
  * accessible via `runtime.getURL` - add it to
