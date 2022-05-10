@@ -1,7 +1,8 @@
-import { ipc, VIDEO_URL_REGEX } from "src/util";
+import { CHANNEL_URL_REGEX, ipc, VIDEO_URL_REGEX } from "src/util";
 import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
 import { rrc } from "masterchat";
+import { Options } from "src/util";
 
 ipc.setupProxy();
 // Allows all of youtube to be iframed (mainly used for Archive Chat)
@@ -74,12 +75,18 @@ tabs.onUpdated.addListener(function (tabId, info, tab) {
 
 browserAction.onClicked.addListener(async function(activeTab, info)
 {
+    const openInNewTab = await Options.get("openHolodexInNewTab");
+    const createOrUpdate = openInNewTab ? "create" : "update";
     // Clicking on icon opens holodex
-    const urlMatch = activeTab.url?.match(VIDEO_URL_REGEX);
-    if(urlMatch?.[5]) {
-      tabs.create({ url: `https://holodex.net/watch/${urlMatch?.[5]}` });
+    const videoMatch = activeTab.url?.match(VIDEO_URL_REGEX);
+    const channelMatch = activeTab.url?.match(CHANNEL_URL_REGEX);
+    if(videoMatch && videoMatch?.[2].length === 11) {
+      tabs[createOrUpdate]({ url: `https://holodex.net/watch/${videoMatch?.[2]}` });
+    }
+    else if(channelMatch && channelMatch[1].length === 24) {
+      tabs[createOrUpdate]({ url: `https://holodex.net/channel/${channelMatch?.[1]}` });
     }
     else {
-      tabs.create({ url: "https://holodex.net" });
+      tabs[createOrUpdate]({ url: "https://holodex.net" });
     }
 });
