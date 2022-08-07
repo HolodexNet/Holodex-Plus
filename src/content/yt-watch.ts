@@ -8,8 +8,6 @@ const icon3 = `
 </svg>
 `;
 
-let served = false;
-
 function openHolodex() {
   const currentUrl = new URL(window.location.href);
   const videoID = currentUrl.searchParams.get("v");
@@ -44,9 +42,7 @@ function inject(target: Element) {
 async function init() {
   if (!(await Options.get("openInHolodexButton"))) return;
 
-  const onMutation = (mutations: MutationRecord[]) => {
-    if (served) return;
-
+  const onMutation = (mutations: MutationRecord[], observer: MutationObserver) => {
     for (const mutation of mutations) {
       if (mutation.type !== "childList") continue;
       const target = mutation.target as Element;
@@ -56,19 +52,21 @@ async function init() {
       cleanup();
       inject(target);
 
-      served = true;
-      break;
+      return observer.disconnect();
     }
   };
 
+  const observer = new MutationObserver(onMutation);
+
+  const observe = () => {
+    observer.observe(document.querySelector("ytd-app")!, { attributes: false, childList: true, subtree: true });
+  };
+
   runtime.onMessage.addListener((message) => {
-    if (message.command === "loaded") served = false;
+    if (message.command === "loaded") observe();
   });
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const observer = new MutationObserver(onMutation);
-    observer.observe(document.querySelector("ytd-app")!, { attributes: false, childList: true, subtree: true });
-  });
+  document.addEventListener("DOMContentLoaded", observe, { once: true });
 }
 
 init();
