@@ -1,4 +1,4 @@
-import { CHANNEL_URL_REGEX, ipc, VIDEO_URL_REGEX } from "src/util";
+import { ipc, CHANNEL_URL_REGEX, VIDEO_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
 import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
 import { rrc } from "masterchat";
@@ -72,21 +72,55 @@ tabs.onUpdated.addListener(function (tabId, info, tab) {
   }
 });
 
+async function getHolodexUrl(url: string | undefined, tabId?: number | undefined): Promise<string> {
+  if (url !== undefined) {
+    const videoMatch = url.match(VIDEO_URL_REGEX);
+    if (videoMatch && videoMatch[2].length === 11) {
+      return `https://holodex.net/watch/${videoMatch[2]}`;
+    }
+    const channelMatch = url.match(CHANNEL_URL_REGEX);
+    if (channelMatch && channelMatch[1].length === 24) {
+      return `https://holodex.net/channel/${channelMatch[1]}`;
+    }
+  }
+  if (tabId !== undefined) {
+    console.debug('getting canonical URL for', url);
+    let canonicalUrl;
+    try {
+      canonicalUrl = await tabs.sendMessage(tabId, { command: "getCanonicalUrl" });
+    } catch (e) {
+      if (!url) return "";
+      // Fallback in case Holodex+ was unloaded or out of date on the page:
+      // Fetch the page again and assume first matched URL is the canonical URL.
+      console.debug('fetch fallback for canonical URL');
+      const doc = await (await fetch(url)).text();
+      const match = doc.match(CANONICAL_URL_REGEX);
+      if (match) {
+        canonicalUrl = 'https://www.youtube.com' + match[0];
+      }
+    }
+    console.debug('canonical URL:', canonicalUrl);
+    if (canonicalUrl) {
+      return await getHolodexUrl(canonicalUrl);
+    }
+  }
+  return "https://holodex.net";
+}
 
 browserAction.onClicked.addListener(async function(activeTab, info)
 {
     const openInNewTab = await Options.get("openHolodexInNewTab");
-    const createOrUpdate = openInNewTab ? "create" : "update";
     // Clicking on icon opens holodex
-    const videoMatch = activeTab.url?.match(VIDEO_URL_REGEX);
-    const channelMatch = activeTab.url?.match(CHANNEL_URL_REGEX);
-    if(videoMatch && videoMatch?.[2].length === 11) {
-      tabs[createOrUpdate]({ url: `https://holodex.net/watch/${videoMatch?.[2]}` });
-    }
-    else if(channelMatch && channelMatch[1].length === 24) {
-      tabs[createOrUpdate]({ url: `https://holodex.net/channel/${channelMatch?.[1]}` });
-    }
-    else {
-      tabs[createOrUpdate]({ url: "https://holodex.net" });
+    const url = await getHolodexUrl(activeTab.url, activeTab.id);
+    if (!url) return;
+    if (openInNewTab) {
+      tabs.create({
+        url,
+        windowId: activeTab.windowId,
+        index: activeTab.index + 1,
+        openerTabId: activeTab.id,
+      });
+    } else {
+      tabs.update({ url });
     }
 });

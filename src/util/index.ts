@@ -1,8 +1,10 @@
 import { runtime } from "webextension-polyfill";
 
-export const CHANNEL_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/)(?:channel|c)\/([\w\-\_]*)/i;
+export const CHANNEL_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/)(?:channel|c)\/([\w\-_]*)/i;
 
-export const VIDEO_URL_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|\?v=)([^#&?]*).*/;
+export const VIDEO_URL_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|shorts\/|watch\?v=|&v=|\?v=)([^#&?]*).*/i;
+
+export const CANONICAL_URL_REGEX = /\/(?:channel\/|shorts\/|watch\?v=)[A-Za-z0-9\-_]+/;
 
 /**
  * Inject a script onto the page. Script must be
@@ -25,7 +27,7 @@ type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T][];
  * **Only use this for constant objects!**
  */
 export function entries<T>(object: T): Entries<T> {
-  return Object.entries(object) as any;
+  return Object.entries(object as any) as any;
 }
 
 /**
