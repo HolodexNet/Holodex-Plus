@@ -4,6 +4,8 @@ export const CHANNEL_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/)(?
 
 export const VIDEO_URL_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|shorts\/|watch\?v=|&v=|\?v=)([^#&?]*).*/i;
 
+export const CANONICAL_URL_REGEX = /\/(?:channel\/|shorts\/|watch\?v=)[A-Za-z0-9\-_]+/;
+
 /**
  * Inject a script onto the page. Script must be
  * accessible via `runtime.getURL` - add it to

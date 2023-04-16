@@ -1,4 +1,4 @@
-import { Options } from "src/util";
+import { Options, CANONICAL_URL_REGEX } from "src/util";
 import { runtime } from "webextension-polyfill";
 
 const icon3 = `
@@ -42,6 +42,36 @@ function inject(target: Element) {
 }
 
 async function init() {
+  runtime.onMessage.addListener(async (message) => {
+    switch (message?.command) {
+      case "loaded":
+        served = false;
+        return;
+      case "getCanonicalUrl":
+        let canonicalUrl = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+        let debugLabel;
+        if (canonicalUrl && CANONICAL_URL_REGEX.test(canonicalUrl)) {
+          debugLabel = 'canonical URL from link[rel="canonical"]:';
+        } else {
+          // Some pages like playlists don't have a canonical URL with a corresponding Holodex URL,
+          // so just find the first canonical URL we can handle from inline script elements
+          // (should be in ytInitialData).
+          for (const script of document.getElementsByTagName('script')) {
+            const match = script.textContent?.match(CANONICAL_URL_REGEX)
+            if (match) {
+              debugLabel = 'canonical URL from inline script element:';
+              canonicalUrl = 'https://www.youtube.com' + match[0];
+              break;
+            }
+          }
+        }
+        console.debug('[Holodex+]', debugLabel, canonicalUrl);
+        return canonicalUrl;
+    default:
+        console.error('[Holodex+] unrecognized message:', message);
+    }
+  });
+
   if (!(await Options.get("openInHolodexButton"))) return;
 
   const onMutation = (mutations: MutationRecord[]) => {
@@ -60,10 +90,6 @@ async function init() {
       break;
     }
   };
-
-  runtime.onMessage.addListener((message) => {
-    if (message.command === "loaded") served = false;
-  });
 
   document.addEventListener("DOMContentLoaded", () => {
     const observer = new MutationObserver(onMutation);
