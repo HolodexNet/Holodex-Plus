@@ -2,6 +2,9 @@ import { runtime } from "webextension-polyfill";
 
 export const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
 
+// This needs to match the YouTube URL matching in generate-manifest.js.
+export const YOUTUBE_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?youtube.com\b/i;
+
 export const CHANNEL_URL_REGEX = /\b[A-Za-z0-9\-_]{24}\b/;
 
 export const VIDEO_URL_REGEX = /\b[A-Za-z0-9\-_]{11}\b/;

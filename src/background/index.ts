@@ -1,4 +1,4 @@
-import { ipc, HOLODEX_URL_REGEX, VIDEO_URL_REGEX, CHANNEL_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
+import { ipc, HOLODEX_URL_REGEX, YOUTUBE_URL_REGEX, VIDEO_URL_REGEX, CHANNEL_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
 import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
 import { rrc } from "masterchat";
@@ -73,7 +73,7 @@ tabs.onUpdated.addListener(function (tabId, info, tab) {
 });
 
 async function getHolodexUrl(url: string | undefined, tabId?: number | undefined): Promise<string | null> {
-  if (url !== undefined) {
+  if (url) {
     if (HOLODEX_URL_REGEX.test(url)) {
       return null;
     }
@@ -85,26 +85,28 @@ async function getHolodexUrl(url: string | undefined, tabId?: number | undefined
     if (channelMatch) {
       return `https://holodex.net/channel/${channelMatch[0]}`;
     }
-  }
-  if (tabId !== undefined) {
-    console.debug('getting canonical URL for', url);
-    let canonicalUrl;
-    try {
-      canonicalUrl = await tabs.sendMessage(tabId, { command: "getCanonicalUrl" });
-    } catch (e) {
-      if (!url) return "";
-      // Fallback in case Holodex+ was unloaded or out of date on the page:
-      // Fetch the page again and assume first matched URL is the canonical URL.
-      console.debug('fetch fallback for canonical URL');
-      const doc = await (await fetch(url)).text();
-      const match = doc.match(CANONICAL_URL_REGEX);
-      if (match) {
-        canonicalUrl = 'https://www.youtube.com' + match[0];
+    if (YOUTUBE_URL_REGEX.test(url) && tabId !== undefined) {
+      console.debug("getting canonical URL for", url);
+      let canonicalUrl = null;
+      try {
+        canonicalUrl = await tabs.sendMessage(tabId, { command: "getCanonicalUrl" });
+      } catch (e) {
       }
-    }
-    console.debug('canonical URL:', canonicalUrl);
-    if (canonicalUrl) {
-      return await getHolodexUrl(canonicalUrl);
+      // Fallback in case Holodex+ was unloaded or out of date on the page,
+      // or if the content script somehow can't find a canonical URL:
+      // Fetch the page again and take the first matched canonical URL.
+      if (!canonicalUrl && url) {
+        console.debug("fetch fallback for canonical URL");
+        const doc = await (await fetch(url)).text();
+        const match = doc.match(CANONICAL_URL_REGEX);
+        if (match) {
+          canonicalUrl = "https://www.youtube.com" + match[0];
+        }
+      }
+      console.debug("canonical URL:", canonicalUrl);
+      if (canonicalUrl) {
+        return await getHolodexUrl(canonicalUrl);
+      }
     }
   }
   return "https://holodex.net";
