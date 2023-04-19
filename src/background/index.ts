@@ -1,4 +1,4 @@
-import { ipc, CHANNEL_URL_REGEX, VIDEO_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
+import { ipc, HOLODEX_URL_REGEX, VIDEO_URL_REGEX, CHANNEL_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
 import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
 import type { Runtime } from "webextension-polyfill";
 import { rrc } from "masterchat";
@@ -72,15 +72,18 @@ tabs.onUpdated.addListener(function (tabId, info, tab) {
   }
 });
 
-async function getHolodexUrl(url: string | undefined, tabId?: number | undefined): Promise<string> {
+async function getHolodexUrl(url: string | undefined, tabId?: number | undefined): Promise<string | null> {
   if (url !== undefined) {
+    if (HOLODEX_URL_REGEX.test(url)) {
+      return null;
+    }
     const videoMatch = url.match(VIDEO_URL_REGEX);
-    if (videoMatch && videoMatch[2].length === 11) {
-      return `https://holodex.net/watch/${videoMatch[2]}`;
+    if (videoMatch) {
+      return `https://holodex.net/watch/${videoMatch[0]}`;
     }
     const channelMatch = url.match(CHANNEL_URL_REGEX);
-    if (channelMatch && channelMatch[1].length === 24) {
-      return `https://holodex.net/channel/${channelMatch[1]}`;
+    if (channelMatch) {
+      return `https://holodex.net/channel/${channelMatch[0]}`;
     }
   }
   if (tabId !== undefined) {

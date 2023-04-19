@@ -1,10 +1,12 @@
 import { runtime } from "webextension-polyfill";
 
-export const CHANNEL_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/)(?:channel|c)\/([\w\-_]*)/i;
+export const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
 
-export const VIDEO_URL_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|shorts\/|watch\?v=|&v=|\?v=)([^#&?]*).*/i;
+export const CHANNEL_URL_REGEX = /\b[A-Za-z0-9\-_]{24}\b/;
 
-export const CANONICAL_URL_REGEX = /\/(?:channel\/|shorts\/|watch\?v=)[A-Za-z0-9\-_]+/;
+export const VIDEO_URL_REGEX = /\b[A-Za-z0-9\-_]{11}\b/;
+
+export const CANONICAL_URL_REGEX = /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
 
 /**
  * Inject a script onto the page. Script must be
