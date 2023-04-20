@@ -1,6 +1,6 @@
 import { ipc, HOLODEX_URL_REGEX, YOUTUBE_URL_REGEX, VIDEO_URL_REGEX, CHANNEL_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
-import { webRequest, runtime, tabs, browserAction } from "webextension-polyfill";
-import type { Runtime } from "webextension-polyfill";
+import { webRequest, runtime, tabs, windows, browserAction } from "webextension-polyfill";
+import type { Runtime, Tabs } from "webextension-polyfill";
 import { rrc } from "masterchat";
 import { Options } from "src/util";
 
@@ -85,7 +85,7 @@ async function getHolodexUrl(url: string | undefined, tabId?: number | undefined
     if (channelMatch) {
       return `https://holodex.net/channel/${channelMatch[0]}`;
     }
-    if (YOUTUBE_URL_REGEX.test(url) && tabId !== undefined) {
+    if (YOUTUBE_URL_REGEX.test(url) && tabId !== undefined && tabId !== tabs.TAB_ID_NONE) {
       console.debug("getting canonical URL for", url);
       let canonicalUrl: string | null = null;
       try {
@@ -119,20 +119,40 @@ async function getHolodexUrl(url: string | undefined, tabId?: number | undefined
   return "https://holodex.net";
 }
 
+// Support Chromium tab groups (N/A on Firefox)
+const tabsGroup = (tabs as any).group;
+function moveToTabGroup(tabId: any, groupId: any) {
+  if (tabId !== undefined && tabId !== tabs.TAB_ID_NONE &&
+      groupId !== undefined && groupId !== -1) { // chrome.tabGroups.TAB_GROUP_ID_NONE is -1
+    tabsGroup({
+      groupId,
+      tabIds: tabId,
+    }, (groupId: number) => {
+      console.debug("tab", tabId, "moved to group", groupId);
+    });
+  }
+}
+
 browserAction.onClicked.addListener(async function(activeTab, info)
 {
-    const openInNewTab = await Options.get("openHolodexInNewTab");
-    // Clicking on icon opens holodex
-    const url = await getHolodexUrl(activeTab.url, activeTab.id);
-    if (!url) return;
-    if (openInNewTab) {
-      tabs.create({
-        url,
-        windowId: activeTab.windowId,
-        index: activeTab.index + 1,
-        openerTabId: activeTab.id,
-      });
-    } else {
-      tabs.update({ url });
-    }
+  console.debug("Holodex button click for active tab:", activeTab);
+  const openInNewTab = await Options.get("openHolodexInNewTab");
+  // Clicking on icon opens holodex
+  const url = await getHolodexUrl(activeTab.url, activeTab.id);
+  if (!url) return;
+  if (openInNewTab) {
+    const createProps: Tabs.CreateCreatePropertiesType = {
+      url,
+      index: activeTab.index + 1,
+    };
+    if (activeTab.windowId !== undefined && activeTab.windowId !== windows.WINDOW_ID_NONE)
+      createProps.windowId = activeTab.windowId;
+    if (activeTab.id !== undefined && activeTab.id !== tabs.TAB_ID_NONE)
+      createProps.openerTabId = activeTab.id;
+    const newTab = await tabs.create(createProps);
+    console.debug("new tab created:", newTab);
+    if (tabsGroup) moveToTabGroup(newTab?.id, (activeTab as any).groupId);
+  } else {
+    tabs.update({ url });
+  }
 });
