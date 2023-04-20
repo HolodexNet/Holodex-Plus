@@ -19,6 +19,7 @@
     "@mdi/js": "^6.5.95",
     "masterchat": "^0.13.0",
     "rollup-plugin-copy": "^3.4.0",
+    "signal-promise": "^1.0.3",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
