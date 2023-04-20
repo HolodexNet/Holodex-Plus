@@ -87,7 +87,7 @@ async function getHolodexUrl(url: string | undefined, tabId?: number | undefined
     }
     if (YOUTUBE_URL_REGEX.test(url) && tabId !== undefined) {
       console.debug("getting canonical URL for", url);
-      let canonicalUrl = null;
+      let canonicalUrl: string | null = null;
       try {
         canonicalUrl = await tabs.sendMessage(tabId, { command: "getCanonicalUrl" });
       } catch (e) {
@@ -105,7 +105,14 @@ async function getHolodexUrl(url: string | undefined, tabId?: number | undefined
       }
       console.debug("canonical URL:", canonicalUrl);
       if (canonicalUrl) {
-        return await getHolodexUrl(canonicalUrl);
+        const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
+        if (videoMatch) {
+          return `https://holodex.net/watch/${videoMatch[0]}`;
+        }
+        const channelMatch = canonicalUrl.match(CHANNEL_URL_REGEX);
+        if (channelMatch) {
+          return `https://holodex.net/channel/${channelMatch[0]}`;
+        }
       }
     }
   }
