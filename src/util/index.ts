@@ -109,6 +109,48 @@ export function validOrigin(origin: string) {
   return origin.match(/^https?:\/\/(localhost:|(\S+\.)?holodex\.net)/i);
 }
 
+interface SearchObjectItem {
+  val: any;
+  prop: string;
+  parent: SearchObjectItem | null;
+}
+
+/**
+ * Recursively searches an object and its entries until given predicate is satisfied,
+ * i.e. returns truthy value, and returns that truthy value.
+ * If the predicate is never satisfied, returns the last (falsy) value it returned.
+ *
+ * The predicate is passed: {
+ *    val: property value, or given object at root),
+ *    prop: property name, or '' at root),
+ *    parent: parent {val, prop, parent} object (this is a recursive data structure), or null at root
+ * }
+ *
+ * Supports de-facto entries() protocol used by Map and Set (and Array) types,
+ * along with standard object enumeration ([own property, value] entries).
+ * This does mean extra properties on objects that aren't included in entries() won't be iterated over.
+ */
+export function searchObject<T>(obj: any, predicate: (val: SearchObjectItem) => T) {
+  return searchObjectHelper({val: obj, prop: "", parent: null}, predicate, new Set());
+}
+
+function searchObjectHelper<T>(item: SearchObjectItem, predicate: (val: SearchObjectItem) => T, walked: Set<any>) {
+  let result = predicate(item);
+  if (result) return result;
+  const obj = item.val;
+  if (walked.has(obj)) return result;
+  walked.add(obj);
+  if (obj === undefined || typeof obj !== "object") return result;
+  // Support de-facto entries() protocol used by Map and Set (and Array) types, along with standard object enumeration.
+  // This does mean extra properties on objects of such types that aren't included in entries() won't be iterated over.
+  const entries = typeof obj.entries === "function" ? obj.entries() : Object.entries(obj);
+  for (const [prop, val] of entries) {
+    result = searchObjectHelper({val, prop, parent: item}, predicate, walked);
+    if (result) return result;
+  }
+  return result;
+}
+
 export * from "./storage";
 import * as ipc from "./ipc";
 
