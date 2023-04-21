@@ -66,21 +66,15 @@ getBrowserInfo().then((info) => {
   }
 });
 
-tabs.onUpdated.addListener(function (tabId, info, tab) {
-  if (tab.url?.startsWith("https://www.youtube.com/watch")) {
-    if (info.status === "complete") tabs.sendMessage(tabId, { command: "loaded" });
-  }
-});
-
 // Clicking on Holodex extension icon opens Holodex
 browserAction.onClicked.addListener(async function(tab) {
   console.debug("Holodex button clicked for active tab:", tab);
   if (tab.id === undefined || tab.id === tabs.TAB_ID_NONE) return;
   const url = await getHolodexUrl(tab.url, tab.id);
   if (url) openUrl(tab, url);
- });
+});
 
- async function getHolodexUrl(url: string | undefined, tabId: number): Promise<string | null> {
+async function getHolodexUrl(url: string | undefined, tabId: number): Promise<string | null> {
   if (url) {
     if (HOLODEX_URL_REGEX.test(url)) {
       return null;

@@ -45,9 +45,17 @@ runtime.onMessage.addListener((message) => {
     <path d="M10.6467 13.4572L10.6467 6.11021C10.6467 5.26342 11.5722 4.74193 12.2965 5.18064L24.4262 12.5276C25.1245 12.9506 25.1245 13.9638 24.4262 14.3868L12.2965 21.7338C11.5722 22.1725 10.6467 21.651 10.6467 20.8042L10.6467 13.4572Z" stroke-width="0.987994"></path>
   </svg>
   `;
-  
-  let served = false;
-  
+
+  let rendered = false;
+
+  // This fires on both new page (re)load and internal navigation to another page
+  // (yt-page-data-fetched and other events also fire but before navigation finishes),
+  // allowing it to clear the rendered flag.
+  document.addEventListener("yt-navigate-finish", (evt: any) => {
+    console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
+    rendered = false;
+  });
+
   function openHolodex() {
     const currentUrl = new URL(window.location.href);
     const videoID = currentUrl.searchParams.get("v");
@@ -55,11 +63,11 @@ runtime.onMessage.addListener((message) => {
     const holodexUrl = `https://holodex.net/watch/${videoID}${t ? `?t=${t}` : ""}`;
     window.open(holodexUrl);
   }
-  
+
   function cleanup() {
     document.querySelectorAll("#yt-watch-holodex-btn-container").forEach((item) => item.remove());
   }
-  
+
   function inject(target: Element) {
     const container = document.createElement("a");
     container.id = "yt-watch-holodex-btn-container";
@@ -68,7 +76,7 @@ runtime.onMessage.addListener((message) => {
     container.style.marginLeft = "6px";
     container.title = "Open in Holodex";
     container.addEventListener("click", openHolodex);
-  
+
     container.innerHTML = `
 <div class="yt-watch-holodex-btn">
   ${icon3}
@@ -79,14 +87,8 @@ runtime.onMessage.addListener((message) => {
     target.appendChild(container);
   }
 
-  runtime.onMessage.addListener((message) => {
-    if (message?.command !== "loaded") return;
-    served = false;
-    return Promise.resolve();
-  });
-
   const onMutation = (mutations: MutationRecord[]) => {
-    if (served) return;
+    if (rendered) return;
 
     for (const mutation of mutations) {
       if (mutation.type !== "childList") continue;
@@ -97,7 +99,7 @@ runtime.onMessage.addListener((message) => {
       cleanup();
       inject(target);
 
-      served = true;
+      rendered = true;
       break;
     }
   };
