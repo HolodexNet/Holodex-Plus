@@ -5,6 +5,36 @@ import { runtime } from "webextension-polyfill";
 // @ts-ignore
 import Signal from "signal-promise";
 
+// If openHolodexInNewTab=true, opens given URL in a new focused tab and returns true,
+// or null if somehow unsuccessful.
+// If openHolodexInNewTab=false, opens given URL in the same tab, preserving the tab's session history,
+// and returns false.
+async function openUrl(url: string) {
+  if (await Options.get("openHolodexInNewTab")) {
+    const newWindow = window.open(url);
+    if (newWindow) {
+      newWindow.focus();
+      return true;
+    }
+    return null;
+  } else {
+    window.location.assign(url);
+    return false;
+  }
+}
+
+// Workaround for Chromium-based browser issue where chrome.tabs.update doesn't reliably push
+// a new entry onto the tab's session history. See details at openUrl in background/index.ts.
+//
+// Note regarding the Promise.resolve below:
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
+// "If you only want the listener to respond to messages of a certain type, you must define the listener as a non-async function,
+// and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
+runtime.onMessage.addListener((message) => {
+  if (message?.command !== "openUrl") return;
+  return Promise.resolve(openUrl(message.url));
+});
+
 // Holodex button injected into YT pages
 (async () => {
   if (!(await Options.get("openInHolodexButton"))) return;
@@ -49,9 +79,6 @@ import Signal from "signal-promise";
     target.appendChild(container);
   }
 
-  // Note: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
-  // "If you only want the listener to respond to messages of a certain type, you must define the listener as a non-async function,
-  // and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
   runtime.onMessage.addListener((message) => {
     if (message?.command !== "loaded") return;
     served = false;
