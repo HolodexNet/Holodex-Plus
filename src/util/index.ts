@@ -87,21 +87,21 @@ export const svg = (d: string, clazz?: string) => {
 };
 
 /**
- * Wait until an element can be found using `selector`.
+ * Wait until an element exists by id.
  *
  * Most web apps don't render the whole page at once,
  * so attempting to modify a web app's content at document
  * load will probably fail. This is slightly more reliable.
  */
-export function waitForEl(selector: string) {
+export function waitForElementId(id: string, root: Element | Document | null = null) {
   return new Promise<Element>((resolve) => {
-    const interval = setInterval(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        clearInterval(interval);
-        resolve(el);
+    new MutationObserver((mutations, observer) => {
+      const element = document.getElementById(id);
+      if (element) {
+        observer.disconnect();
+        resolve(element);
       }
-    }, 200);
+    }).observe(root ?? document, { childList: true, subtree: true });
   });
 }
 

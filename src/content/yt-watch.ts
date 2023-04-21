@@ -1,4 +1,4 @@
-import { Options, searchObject, CANONICAL_URL_REGEX } from "src/util";
+import { Options, waitForElementId, searchObject, CANONICAL_URL_REGEX } from "src/util";
 import { runtime } from "webextension-polyfill";
 
 // This is an external JS lib without typing (d.ts), so need the @ts-ignore
@@ -64,11 +64,12 @@ runtime.onMessage.addListener((message) => {
     window.open(holodexUrl);
   }
 
-  function cleanup() {
-    document.querySelectorAll("#yt-watch-holodex-btn-container").forEach((item) => item.remove());
-  }
+  function render(target: Element, debugLabel: string) {
+    console.debug("[Holodex+] (re)rendering Holodex button within", debugLabel, target);
+    for (const container of document.querySelectorAll("#yt-watch-holodex-btn-container")) {
+      container.remove();
+    }
 
-  function inject(target: Element) {
     const container = document.createElement("a");
     container.id = "yt-watch-holodex-btn-container";
     container.style.textDecoration = "none";
@@ -83,30 +84,34 @@ runtime.onMessage.addListener((message) => {
   <span class="yt-watch-holodex-label">Holodex</span>
 </div>
     `;
-  
+
     target.appendChild(container);
+    rendered = true;
   }
 
-  const onMutation = (mutations: MutationRecord[]) => {
-    if (rendered) return;
+  document.addEventListener("DOMContentLoaded", async () => {
+    const ytdApp = document.querySelector("ytd-app");
+    if (!ytdApp) throw new Error("[Holodex+] unexpectedly could not find ytd-app");
 
-    for (const mutation of mutations) {
-      if (mutation.type !== "childList") continue;
-      const target = mutation.target as Element;
-      if (target.id !== "top-level-buttons-computed") continue;
+    const actions = await waitForElementId("actions", ytdApp);
+    console.debug("[Holodex+] found #actions:", actions);
 
-      // re-render button
-      cleanup();
-      inject(target);
+    // Setup mutation observer to (re)render when #top-level-buttons-computed is added,
+    // both for new page (re)load and internal navigation to another page.
+    new MutationObserver((mutations: MutationRecord[]) => {
+      if (rendered) return;
+      for (const mutation of mutations) {
+        const target = mutation.target as Element;
+        if (target.id !== "top-level-buttons-computed") continue;
+        render(target, "MutationObserver-detected");
+        break;
+      }
+    }).observe(actions, { childList: true, subtree: true });
 
-      rendered = true;
-      break;
-    }
-  };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const observer = new MutationObserver(onMutation);
-    observer.observe(document.querySelector("ytd-app")!, { attributes: false, childList: true, subtree: true });
+    // If #actions already contains #top-level-buttons-computed, render immediately.
+    // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
+    const target = actions.querySelector("#top-level-buttons-computed");
+    if (target) render(target, "already existing");
   });
 })();
 
