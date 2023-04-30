@@ -1,4 +1,4 @@
-import { ipc, HOLODEX_URL_REGEX, YOUTUBE_URL_REGEX, VIDEO_URL_REGEX, CHANNEL_URL_REGEX, CANONICAL_URL_REGEX } from "src/util";
+import { ipc, getHolodexUrl, CANONICAL_URL_REGEX } from "src/util";
 import { webRequest, runtime, tabs, windows, browserAction } from "webextension-polyfill";
 import type { Runtime, Tabs } from "webextension-polyfill";
 import { rrc } from "masterchat";
@@ -70,85 +70,32 @@ getBrowserInfo().then((info) => {
 browserAction.onClicked.addListener(async function(tab) {
   console.debug("Holodex button clicked for active tab:", tab);
   if (tab.id === undefined || tab.id === tabs.TAB_ID_NONE) return;
-  const url = await getHolodexUrl(tab.url, tab.id);
-  if (url) openUrl(tab, url);
+  openHolodexUrl(tab);
 });
 
-async function getHolodexUrl(url: string | undefined, tabId: number): Promise<string | null> {
-  if (url) {
-    if (HOLODEX_URL_REGEX.test(url)) {
-      return null;
-    }
-    const videoMatch = url.match(VIDEO_URL_REGEX);
-    if (videoMatch) {
-      return `https://holodex.net/watch/${videoMatch[0]}`;
-    }
-    const channelMatch = url.match(CHANNEL_URL_REGEX);
-    if (channelMatch) {
-      return `https://holodex.net/channel/${channelMatch[0]}`;
-    }
-    if (YOUTUBE_URL_REGEX.test(url)) {
-      // Get canonical URL from which we can derive video or channel id.
-      console.debug("getting canonical URL for", url);
-      let canonicalUrl: string | null = null;
-      try {
-        canonicalUrl = await tabs.sendMessage(tabId, { command: "getCanonicalUrl" });
-      } catch (e) {
-      }
-      // Fallback in case Holodex+ was unloaded or out of date on the page
-      // (Chromium-based browsers, unlike Firefox, don't load content scripts upon enabling extensions),
-      // or if the content script somehow can't find a canonical URL:
-      // Fetch the page again and take the first matched canonical URL.
-      if (!canonicalUrl && url) {
-        console.debug("(fallback) fetch original page for canonical URL");
-        const doc = await (await fetch(url)).text();
-        const match = doc.match(CANONICAL_URL_REGEX);
-        if (match) {
-          canonicalUrl = "https://www.youtube.com" + match[0];
-        }
-      }
-      console.debug("canonical URL:", canonicalUrl);
-      if (canonicalUrl) {
-        const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
-        if (videoMatch) {
-          return `https://holodex.net/watch/${videoMatch[0]}`;
-        }
-        const channelMatch = canonicalUrl.match(CHANNEL_URL_REGEX);
-        if (channelMatch) {
-          return `https://holodex.net/channel/${channelMatch[0]}`;
-        }
-      }
-    }
-  }
-  return "https://holodex.net";
-}
-
-// Opens given URL in either new tab and same tab, depending on openHolodexInNewTab option.
+// Opens Holodex URL for current URL in either a new tab or the same tab, depending on openHolodexInNewTab option.
 //
-// Issue for the openHolodexInNewTab=false case:
+// This delegates to the context script to work around an issue for the openHolodexInNewTab=false case:
 // For Chromium-based browsers, chrome.tabs.update doesn't reliably push a new entry onto the tab's session history,
 // instead replacing the current state, e.g. if tab has history [A,B] and we're trying to chrome.tabs.update to C,
 // this sometimes results in [A,C] rather than [A,B,C].
 // Details: https://groups.google.com/a/chromium.org/g/chromium-extensions/c/n3vFlEYueyo
 // Firefox doesn't have this problem (and in fact, provides a loadReplace flag to control the behavior),
 // but might as well standardize for all browsers.
-//
-// Workaround: update the tab in the context script context via location.assign (or assigning location.href),
-// which does seem to always push a new entry onto the tab's session history.
-// This is accomplished with an "openUrl" message that yt-watch.ts handles.
-//
+// The workaround of updating the tab in the context script context via location.assign
+// (or assigning location.href) does seem to always push a new entry onto the tab's session history.
 // For the openHolodexInNewTab=true case, delegating to the content script is actually convenient,
 // since window.open sets tab position, opener, and tab group (for Chromium-based browsers) properly.
-async function openUrl(tab: Tabs.Tab, url: string) {
+async function openHolodexUrl(tab: Tabs.Tab) {
   try {
-    const openedNewTab = await tabs.sendMessage(tab.id!, { command: "openUrl", url: url });
-    if (openedNewTab !== null) {
-      // There's no 100% reliable way to ensure the new tab is the current tab,
+    const result = await tabs.sendMessage(tab.id!, { command: "openHolodexUrl" });
+    if (result) {
+      // There's no 100% reliable way to get the tab id of a newly opened tab,
       // so don't bother to try fetching that new tab, especially just for debug logging.
-      console.debug(openedNewTab ? "new tab created" : "updated tab", "from content script context");
+      console.debug(result.newTabOpened ? "new tab created" : "updated tab", "from content script:", result.url);
     }
   } catch (e) {
-    fallbackOpenUrl(tab, url);
+    fallbackOpenHolodexUrl(tab);
   }
 }
 
@@ -156,7 +103,17 @@ async function openUrl(tab: Tabs.Tab, url: string) {
 // (Chromium-based browsers, unlike Firefox, don't load content scripts upon enabling extensions).
 // This uses chrome.tabs.update when openHolodexInNewTab=false and thus is susceptible to the issue
 // described above, but it's better than nothing.
-async function fallbackOpenUrl(tab: Tabs.Tab, url: string) {
+// It also uses a simpler canonical URL search by fetching the page again and finding the first match.
+async function fallbackOpenHolodexUrl(tab: Tabs.Tab) {
+  const url = await getHolodexUrl(tab.url, async (url) => {
+    console.debug("(fallback) fetch original page for canonical URL");
+    const doc = await (await fetch(url)).text();
+    const match = doc.match(CANONICAL_URL_REGEX);
+    const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
+    console.debug("(fallback) found canonical URL:", canonicalUrl);
+    return canonicalUrl;
+  });
+  if (!url) return;
   if (await Options.get("openHolodexInNewTab")) {
     const createProps: Tabs.CreateCreatePropertiesType = {
       url,

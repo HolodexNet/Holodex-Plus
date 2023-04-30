@@ -1,4 +1,4 @@
-import { Options, waitForElementId, searchObject, CANONICAL_URL_REGEX } from "src/util";
+import { Options, waitForElementId, getHolodexUrl, searchObject, CANONICAL_URL_REGEX } from "src/util";
 import { runtime } from "webextension-polyfill";
 
 // This is an external JS lib without typing (d.ts), so need the @ts-ignore
@@ -22,18 +22,6 @@ async function openUrl(url: string) {
     return false;
   }
 }
-
-// Workaround for Chromium-based browser issue where chrome.tabs.update doesn't reliably push
-// a new entry onto the tab's session history. See details at openUrl in background/index.ts.
-//
-// Note regarding the Promise.resolve below:
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
-// "If you only want the listener to respond to messages of a certain type, you must define the listener as a non-async function,
-// and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
-runtime.onMessage.addListener((message) => {
-  if (message?.command !== "openUrl") return;
-  return Promise.resolve(openUrl(message.url));
-});
 
 // Holodex button injected into YT pages
 (async () => {
@@ -115,13 +103,25 @@ runtime.onMessage.addListener((message) => {
   });
 })();
 
-// getCanonicalUrl handler
+// openHolodexUrl handler
 {
+  // Note regarding the Promise.resolve below:
+  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
+  // "If you only want the listener to respond to messages of a certain type, you must define the listener as a non-async function,
+  // and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
   runtime.onMessage.addListener((message) => {
-    if (message?.command !== "getCanonicalUrl") return;
-    return Promise.resolve(findCanonicalUrl());
+    if (message?.command !== "openHolodexUrl") return;
+    return Promise.resolve(openHolodexUrl());
   });
 
+  async function openHolodexUrl() {
+    const url = await getHolodexUrl(window.location.href, findCanonicalUrl)
+    if (!url) return null;
+    const newTabOpened = openUrl(url);
+    return { url, newTabOpened };
+  }
+
+  // Finds the "canonical URL" for a YT page, from which we can derive the Holodex URL.
   async function findCanonicalUrl() {
     if (!pageData) {
       console.debug("[Holodex+] waiting for page data to become available...");
@@ -158,7 +158,7 @@ runtime.onMessage.addListener((message) => {
     pageDataSignal.notify();
   });
 
-  // If yt-page-data-fetched hasn't fired yet when getCanonicalUrl message is received,
+  // If yt-page-data-fetched hasn't fired yet when openHolodexUrl message is received,
   // then ideally we'd access ytInitialData/ytInitialPlayerResponse/ytPageType as a fallback.
   // However, as global vars in the page context, they're inaccessible form this content script context.
   // Instead, we'll search the script elements for these global vars.

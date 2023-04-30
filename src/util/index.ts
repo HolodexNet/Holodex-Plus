@@ -1,15 +1,53 @@
 import { runtime } from "webextension-polyfill";
 
-export const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
+const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
 
 // This needs to match the YouTube URL matching in generate-manifest.js.
-export const YOUTUBE_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?youtube.com\b/i;
+const YOUTUBE_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?youtube.com\b/i;
 
-export const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
+const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
 
-export const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
+const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
 
 export const CANONICAL_URL_REGEX = /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
+
+/**
+ * Returns a promise resolving to the Holodex URL for given URL.
+ * Supports returning Holodex channel and watch Holodex URLs,
+ * and defaults to Holodex homepage for non-YT URLs and YT homepage & feeds.
+ * For other YT URLs, including the new @<channel> URLs, delegates to given handler,
+ * which is passed the given URL and returns a promise resolving to a YT canonical URL,
+ * from which to derive the Holodex URL from.
+ */
+export async function getHolodexUrl(url: string | undefined, findCanonicalUrl: (url: string) => Promise<string | null>) {
+  if (url) {
+    if (HOLODEX_URL_REGEX.test(url)) {
+      return null;
+    }
+    const videoMatch = url.match(VIDEO_URL_REGEX);
+    if (videoMatch) {
+      return `https://holodex.net/watch/${videoMatch[0]}`;
+    }
+    const channelMatch = url.match(CHANNEL_URL_REGEX);
+    if (channelMatch) {
+      return `https://holodex.net/channel/${channelMatch[0]}`;
+    }
+    if (YOUTUBE_URL_REGEX.test(url)) {
+      const canonicalUrl = await findCanonicalUrl(url);
+      if (canonicalUrl) {
+        const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
+        if (videoMatch) {
+          return `https://holodex.net/watch/${videoMatch[0]}`;
+        }
+        const channelMatch = canonicalUrl.match(CHANNEL_URL_REGEX);
+        if (channelMatch) {
+          return `https://holodex.net/channel/${channelMatch[0]}`;
+        }
+      }
+    }
+  }
+  return "https://holodex.net";
+}
 
 /**
  * Inject a script onto the page. Script must be
