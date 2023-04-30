@@ -61,11 +61,7 @@ runtime.onMessage.addListener((message) => {
     const videoId = currentUrl.searchParams.get("v");
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
-    const holodexUrl = `https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`;
-    if (await Options.get("openHolodexInNewTab"))
-      window.open(holodexUrl);
-    else
-      window.location.assign(holodexUrl);
+    openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
   }
 
   function render(target: Element, debugLabel: string) {
@@ -121,6 +117,26 @@ runtime.onMessage.addListener((message) => {
 
 // getCanonicalUrl handler
 {
+  runtime.onMessage.addListener((message) => {
+    if (message?.command !== "getCanonicalUrl") return;
+    return Promise.resolve(findCanonicalUrl());
+  });
+
+  async function findCanonicalUrl() {
+    if (!pageData) {
+      console.debug("[Holodex+] waiting for page data to become available...");
+      await pageDataSignal.wait(1000);
+      if (!pageData) {
+        console.log("[Holodex+] page data still unavailable - will default to fetch fallback to find canonical URL");
+        return null;
+      }
+    }
+    console.debug("[Holodex+] page data from", pageDataLabel, pageData);
+    const canonicalUrl = getCanonicalUrlFromData(pageData);
+    console.debug("[Holodex+] found canonical URL:", canonicalUrl);
+    return canonicalUrl;
+  }
+
   // The canonical URL is available in link[rel="canonical"] and some other element attrs/content,
   // but it does not update when internally navigating to another page,
   // i.e. a user clicks a YT link from within a YT page.
@@ -139,6 +155,32 @@ runtime.onMessage.addListener((message) => {
       return;
     }
     pageDataLabel = "yt-page-data-fetched event.detail.pageData:";
+    pageDataSignal.notify();
+  });
+
+  // If yt-page-data-fetched hasn't fired yet when getCanonicalUrl message is received,
+  // then ideally we'd access ytInitialData/ytInitialPlayerResponse/ytPageType as a fallback.
+  // However, as global vars in the page context, they're inaccessible form this content script context.
+  // Instead, we'll search the script elements for these global vars.
+  // There's the alternative of injecting a page context script and communicating with it to get these globals
+  // (and ytd-app.data for that matter), but that whole approach is a PITA.
+  // This doesn't have to be perfectly reliable - there's always the fetch fallback in the background script.
+  document.addEventListener("DOMContentLoaded", () => {
+    console.debug("[Holodex+] DOMContentLoaded");
+    // If yt-page-data-fetched has already fired, pageData should already exist.
+    if (pageData) return;
+    // Otherwise, fall back to yt* global vars.
+    const scripts = [...document.querySelectorAll("script[nonce]")];
+    const ytPageType = findGlobalJson(scripts, "ytPageType", true);
+    const ytInitialData = findGlobalJson(scripts, "ytInitialData", true);
+    const ytInitialPlayerResponse = findGlobalJson(scripts, "ytInitialPlayerResponse", false);
+    pageData = {
+      page: ytPageType,
+      response: ytInitialData,
+      playerResponse: ytInitialPlayerResponse,
+    };
+    if (!pageData.playerResponse) delete pageData.playerResponse;
+    pageDataLabel = "yt* global vars:";
     pageDataSignal.notify();
   });
 
@@ -174,32 +216,6 @@ runtime.onMessage.addListener((message) => {
     }
     return canonicalUrl;
   }
-
-  // If yt-page-data-fetched hasn't fired yet when getCanonicalUrl message is received,
-  // then ideally we'd access ytInitialData/ytInitialPlayerResponse/ytPageType as a fallback.
-  // However, as global vars in the page context, they're inaccessible form this content script context.
-  // Instead, we'll search the script elements for these global vars.
-  // There's the alternative of injecting a page context script and communicating with it to get these globals
-  // (and ytd-app.data for that matter), but that whole approach is a PITA.
-  // This doesn't have to be perfectly reliable - there's always the fetch fallback in the background script.
-  document.addEventListener("DOMContentLoaded", () => {
-    console.debug("[Holodex+] DOMContentLoaded");
-    // If yt-page-data-fetched has already fired, pageData should already exist.
-    if (pageData) return;
-    // Otherwise, fall back to yt* global vars.
-    const scripts = [...document.querySelectorAll("script[nonce]")];
-    const ytPageType = findGlobalJson(scripts, "ytPageType", true);
-    const ytInitialData = findGlobalJson(scripts, "ytInitialData", true);
-    const ytInitialPlayerResponse = findGlobalJson(scripts, "ytInitialPlayerResponse", false);
-    pageData = {
-      page: ytPageType,
-      response: ytInitialData,
-      playerResponse: ytInitialPlayerResponse,
-    };
-    if (!pageData.playerResponse) delete pageData.playerResponse;
-    pageDataLabel = "yt* global vars:";
-    pageDataSignal.notify();
-  });
 
   function findGlobalJson(scripts: Element[], varName: string, required: boolean) {
     for (const script of scripts) {
@@ -249,24 +265,4 @@ runtime.onMessage.addListener((message) => {
     }
     return null;
   }
-
-  async function findCanonicalUrl() {
-    if (!pageData) {
-      console.debug("[Holodex+] waiting for page data to become available...");
-      await pageDataSignal.wait(1000);
-      if (!pageData) {
-        console.log("[Holodex+] page data still unavailable - will default to fetch fallback to find canonical URL");
-        return null;
-      }
-    }
-    console.debug("[Holodex+] page data from", pageDataLabel, pageData);
-    const canonicalUrl = getCanonicalUrlFromData(pageData);
-    console.debug("[Holodex+] found canonical URL:", canonicalUrl);
-    return canonicalUrl;
-  }
-
-  runtime.onMessage.addListener((message) => {
-    if (message?.command !== "getCanonicalUrl") return;
-    return Promise.resolve(findCanonicalUrl());
-  });
 }
