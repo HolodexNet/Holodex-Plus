@@ -3,7 +3,9 @@ import { runtime } from "webextension-polyfill";
 const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
 
 // This needs to match the YouTube URL matching in generate-manifest.js.
-const YOUTUBE_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?youtube.com\b/i;
+const YOUTUBE_HOSTNAME_REGEX = /^(?:[^\/]+\.)?youtube.com/i;
+
+const FEED_PATHNAME_REGEX = /^(?:\/?$|\/feed\b)/i; // pathname matches homepage or any feed like subscriptions
 
 const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
 
@@ -32,7 +34,8 @@ export async function getHolodexUrl(url: string | undefined, findCanonicalUrl: (
     if (channelMatch) {
       return `https://holodex.net/channel/${channelMatch[0]}`;
     }
-    if (YOUTUBE_URL_REGEX.test(url)) {
+    const urlObj = new URL(url);
+    if (YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) && !FEED_PATHNAME_REGEX.test(urlObj.pathname)) {
       const canonicalUrl = await findCanonicalUrl(url);
       if (canonicalUrl) {
         const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
