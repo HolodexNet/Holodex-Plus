@@ -3,7 +3,6 @@ import { storage } from "webextension-polyfill";
 // To add something to options, just add it to `schema`
 const schema = {
   // key: default-value
-  liveChatMemoryLeakFix: true,
   remoteLikeButton: true,
   openInHolodexButton: false,
   openHolodexInNewTab: true
@@ -11,8 +10,6 @@ const schema = {
 };
 type Schema = typeof schema;
 const descriptions: Partial<Record<keyof Schema, string>> = {
-  liveChatMemoryLeakFix:
-    "YouTube live chat has a bug where some scheduled tasks are never executed. This patches the scheduler to ensure the memory held by those tasks can be garbage collected.",
   openInHolodexButton:
     "Add a Open in Holodex button to Youtube"
 };
