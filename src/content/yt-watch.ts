@@ -1,4 +1,4 @@
-import { Options, waitForElementId, getHolodexUrl, searchObject, CANONICAL_URL_REGEX } from "src/util";
+import { Options, waitForElementId, inject, getHolodexUrl, searchObject, CANONICAL_URL_REGEX } from "src/util";
 import { runtime } from "webextension-polyfill";
 
 // This is an external JS lib without typing (d.ts), so need the @ts-ignore
@@ -140,49 +140,22 @@ async function openUrl(url: string) {
   // The canonical URL is available in link[rel="canonical"] and some other element attrs/content,
   // but it does not update when internally navigating to another page,
   // i.e. a user clicks a YT link from within a YT page.
-  // If we were in the page context, we could access ytd-app.data to derive the canonical URL.
-  // However, that is managed by YT's own script, so it's inaccessible from this content script context.
-  // Workaround: we can listen into YT's custom event that fires whenever page data is fetched,
-  // including both new page (re)load and internal navigation to another page.
+  // We can derive the canonical URL from ytd-app.data, or yt* global vars initially,
+  // but those are managed by YT's own scripts and thus inaccessible from the content script context.
+  // While we can access both in the page context via an injected page script,
+  // it's a PITA to round-trip messages between content script and injected page script.
+  // Instead, there are events we can hook into to broadcast data updates to this content script.
+  // See yt-watch.inject.ts
   let pageData: any = null;
   let pageDataLabel: string; // for debug logging
   let pageDataSignal = new Signal(); // actually a condition variable in concurrency parlance
-  document.addEventListener("yt-page-data-fetched", (evt: any) => {
-    console.debug("[Holodex+] yt-page-data-fetched event.detail:", evt.detail);
-    pageData = evt.detail?.pageData;
-    if (!pageData) {
-      console.warn("[Holodex+] yt-page-data-fetched event.detail.pageData unexpectedly", pageData);
-      return;
-    }
-    pageDataLabel = "yt-page-data-fetched event.detail.pageData:";
-    pageDataSignal.notify();
+  window.addEventListener("message", (evt: MessageEvent) => {
+    if (evt.origin !== window.location.origin || evt.source !== window || !evt.data?.pageData) return;
+    //console.debug("[Holodex+] received pageData message:", evt.data);
+    ({ pageData, pageDataLabel } = evt.data);
+    if (pageData) pageDataSignal.notify();
   });
-
-  // If yt-page-data-fetched hasn't fired yet when openHolodexUrl message is received,
-  // then ideally we'd access ytInitialData/ytInitialPlayerResponse/ytPageType as a fallback.
-  // However, as global vars in the page context, they're inaccessible form this content script context.
-  // Instead, we'll search the script elements for these global vars.
-  // There's the alternative of injecting a page context script and communicating with it to get these globals
-  // (and ytd-app.data for that matter), but that whole approach is a PITA.
-  // This doesn't have to be perfectly reliable - there's always the fetch fallback in the background script.
-  document.addEventListener("DOMContentLoaded", () => {
-    console.debug("[Holodex+] DOMContentLoaded");
-    // If yt-page-data-fetched has already fired, pageData should already exist.
-    if (pageData) return;
-    // Otherwise, fall back to yt* global vars.
-    const scripts = [...document.querySelectorAll("script[nonce]")];
-    const ytPageType = findGlobalJson(scripts, "ytPageType", true);
-    const ytInitialData = findGlobalJson(scripts, "ytInitialData", true);
-    const ytInitialPlayerResponse = findGlobalJson(scripts, "ytInitialPlayerResponse", false);
-    pageData = {
-      page: ytPageType,
-      response: ytInitialData,
-      playerResponse: ytInitialPlayerResponse,
-    };
-    if (!pageData.playerResponse) delete pageData.playerResponse;
-    pageDataLabel = "yt* global vars:";
-    pageDataSignal.notify();
-  });
+  inject("content/yt-watch.inject.js");
 
   function getCanonicalUrlFromData(pageData: any) {
     // Note: Not using pageData.url since it can e.g. be live/<video_id> which is not canonical.
@@ -215,54 +188,5 @@ async function openUrl(url: string) {
         });
     }
     return canonicalUrl;
-  }
-
-  function findGlobalJson(scripts: Element[], varName: string, required: boolean) {
-    for (const script of scripts) {
-      const scriptText = script.textContent;
-      if (!scriptText) continue;
-      const ytInitialData = parseGlobalJson(scriptText, varName);
-      if (ytInitialData !== null) {
-        console.debug("[Holodex+] found", varName, "global:", ytInitialData, "\nin script:", script);
-        return ytInitialData;
-      }
-    }
-    if (required) throw new Error(`[Holodex+] unexpectedly could not find ${varName}`);
-    return null;
-  }
-
-  // This assumes that the global var declarations follow a certain pattern,
-  // including the value being valid JSON (rather than a non-JSON JS literal).
-  function parseGlobalJson(text: string, varName: string) {
-    const regex = new RegExp(String.raw`\b(?:(?:window\s*\.\s*)?${varName}|window\s*\[\s*['"]${varName}['"]\s*\])\s*=\s*`);
-    let match = text.match(regex);
-    if (!match) return null;
-    text = text.substring(match.index! + match[0].length);
-    let term: string;
-    switch (text[0]) {
-      case "{":
-        term = "}"; break;
-      case "[":
-        term = "]"; break;
-      case "'":
-      case '"':
-        term = text[0]; break;
-      default: {
-        match = text.match(/^[^;]+/);
-        if (!match) return null;
-        return JSON.parse(match[0]);
-      }
-    }
-    const termRegex = new RegExp(String.raw`${term}\s*;`);
-    let termMatch = termRegex.exec(text);
-    while (termMatch) {
-      try {
-        return JSON.parse(text.substring(0, termMatch.index + 1));
-      } catch (e) {
-        // Not complete JSON yet - continue to next iteration
-        termMatch = termRegex.exec(text);
-      }
-    }
-    return null;
   }
 }

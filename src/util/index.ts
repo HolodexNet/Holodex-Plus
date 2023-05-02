@@ -57,11 +57,12 @@ export async function getHolodexUrl(url: string | undefined, findCanonicalUrl: (
  * accessible via `runtime.getURL` - add it to
  * `accessible` in rollup config first.
  */
-export function inject(scriptPath: string) {
+export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
   el.type = "text/javascript";
-  document.head.appendChild(el);
+  const head = await waitForDOMPredicate(() => document.head)
+  head.appendChild(el);
   return el;
 }
 
@@ -128,22 +129,37 @@ export const svg = (d: string, clazz?: string) => {
 };
 
 /**
- * Wait until an element exists by id.
+ * Wait until given "DOM predicate" is satisfied, i.e. returns a truthy value,
+ * and returns a Promise that resolves to that truthy value.
+ * The predicate is called immediately with an empty array,
+ * and then for every batch of DOM mutations (via MutationObserver)
+ * until the predicate is satisfied.
  *
  * Most web apps don't render the whole page at once,
  * so attempting to modify a web app's content at document
  * load will probably fail. This is slightly more reliable.
  */
-export function waitForElementId(id: string, root: Element | Document | null = null) {
-  return new Promise<Element>((resolve) => {
+export function waitForDOMPredicate<T>(predicate: (mutations: MutationRecord[]) => T | null,
+    root: Element | Document | null = null) {
+  const result = predicate([]);
+  if (result) return Promise.resolve(result);
+  return new Promise<T>((resolve) => {
     new MutationObserver((mutations, observer) => {
-      const element = document.getElementById(id);
-      if (element) {
+      const result = predicate(mutations);
+      if (result) {
         observer.disconnect();
-        resolve(element);
+        resolve(result);
       }
     }).observe(root ?? document, { childList: true, subtree: true });
   });
+}
+
+/**
+ * Wait until DOM element with given id exists,
+ * returning a Promise that resolves to that element.
+ */
+export function waitForElementId(id: string, root: Element | Document | null = null) {
+  return waitForDOMPredicate<Element>(() => document.getElementById(id), root);
 }
 
 export function validOrigin(origin: string) {
