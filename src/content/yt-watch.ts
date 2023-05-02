@@ -81,7 +81,13 @@ async function openUrl(url: string) {
     const ytdApp = document.querySelector("ytd-app");
     if (!ytdApp) throw new Error("[Holodex+] unexpectedly could not find ytd-app");
 
-    const actions = await waitForElementId("actions", ytdApp);
+    let actions;
+    try {
+      actions = await waitForElementId("actions", { root: ytdApp, timeout: 10000 });
+    } catch (e) {
+      console.debug("[Holodex+] could not find #actions after 10 secs");
+      return;
+    }
     console.debug("[Holodex+] found #actions:", actions);
 
     // Setup mutation observer to (re)render when #top-level-buttons-computed is added,
@@ -125,7 +131,7 @@ async function openUrl(url: string) {
   async function findCanonicalUrl() {
     if (!pageData) {
       console.debug("[Holodex+] waiting for page data to become available...");
-      await pageDataSignal.wait(1000);
+      await pageDataSignal.wait(3000);
       if (!pageData) {
         console.log("[Holodex+] page data still unavailable - will default to fetch fallback to find canonical URL");
         return null;

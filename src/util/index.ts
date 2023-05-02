@@ -128,38 +128,56 @@ export const svg = (d: string, clazz?: string) => {
   return out;
 };
 
+interface WaitForOptions {
+  root?: Element | Document,
+  timeout?: number,
+}
+
 /**
  * Wait until given "DOM predicate" is satisfied, i.e. returns a truthy value,
- * and returns a Promise that resolves to that truthy value.
+ * and returns a promise that resolves to that truthy value.
  * The predicate is called immediately with an empty array,
- * and then for every batch of DOM mutations (via MutationObserver)
+ * and then for every batch of DOM subtree mutations (via MutationObserver)
  * until the predicate is satisfied.
+ *
+ * Options:
+ * - root: the element or document to watch for DOM mutations
+ * - timeout: if specified, the promise is rejected after timeout milliseconds
  *
  * Most web apps don't render the whole page at once,
  * so attempting to modify a web app's content at document
- * load will probably fail. This is slightly more reliable.
+ * load will probably fail. This should be more reliable.
  */
-export function waitForDOMPredicate<T>(predicate: (mutations: MutationRecord[]) => T | null,
-    root: Element | Document | null = null) {
+export function waitForDOMPredicate<T>(predicate: (mutations: MutationRecord[]) => T | null, options?: WaitForOptions) {
   const result = predicate([]);
   if (result) return Promise.resolve(result);
-  return new Promise<T>((resolve) => {
-    new MutationObserver((mutations, observer) => {
+  return new Promise<T>((resolve, reject) => {
+    const observer = new MutationObserver((mutations, observer) => {
       const result = predicate(mutations);
       if (result) {
         observer.disconnect();
         resolve(result);
       }
-    }).observe(root ?? document, { childList: true, subtree: true });
+    });
+    observer.observe(options?.root ?? document, { childList: true, subtree: true });
+    const timeout = options?.timeout;
+    if (timeout) {
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`waitForDOMPredicate timed out after ${timeout} msecs`));
+      }, timeout);
+    }
   });
 }
 
 /**
  * Wait until DOM element with given id exists,
- * returning a Promise that resolves to that element.
+ * returning a promise that resolves to that element.
+ *
+ * See waitForDOMPredicate for options.
  */
-export function waitForElementId(id: string, root: Element | Document | null = null) {
-  return waitForDOMPredicate<Element>(() => document.getElementById(id), root);
+export function waitForElementId(id: string, options?: WaitForOptions) {
+  return waitForDOMPredicate<Element>(() => document.getElementById(id), options);
 }
 
 export function validOrigin(origin: string) {
