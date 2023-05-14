@@ -1,7 +1,7 @@
 {
   "name": "holodex-plus",
   "description": "Holodex companion extension",
-  "version": "0.1.5",
+  "version": "0.2",
   "scripts": {
     "build": "rollup -c",
     "clean": "rimraf build dist",
