@@ -1,26 +1,68 @@
 import { runtime } from "webextension-polyfill";
 
-export const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
+const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
 
 // This needs to match the YouTube URL matching in generate-manifest.js.
-export const YOUTUBE_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?youtube.com\b/i;
+const YOUTUBE_HOSTNAME_REGEX = /^(?:[^\/]+\.)?youtube.com/i;
 
-export const CHANNEL_URL_REGEX = /\b[A-Za-z0-9\-_]{24}\b/;
+const FEED_PATHNAME_REGEX = /^(?:\/?$|\/feed\b)/i; // pathname matches homepage or any feed like subscriptions
 
-export const VIDEO_URL_REGEX = /\b[A-Za-z0-9\-_]{11}\b/;
+const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
+
+const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
 
 export const CANONICAL_URL_REGEX = /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
+
+/**
+ * Returns a promise resolving to the Holodex URL for given URL.
+ * Supports returning Holodex channel and watch Holodex URLs,
+ * and defaults to Holodex homepage for non-YT URLs and YT homepage & feeds.
+ * For other YT URLs, including the new @<channel> URLs, delegates to given handler,
+ * which is passed the given URL and returns a promise resolving to a YT canonical URL,
+ * from which to derive the Holodex URL from.
+ */
+export async function getHolodexUrl(url: string | undefined, findCanonicalUrl: (url: string) => Promise<string | null>) {
+  if (url) {
+    if (HOLODEX_URL_REGEX.test(url)) {
+      return null;
+    }
+    const videoMatch = url.match(VIDEO_URL_REGEX);
+    if (videoMatch) {
+      return `https://holodex.net/watch/${videoMatch[0]}`;
+    }
+    const channelMatch = url.match(CHANNEL_URL_REGEX);
+    if (channelMatch) {
+      return `https://holodex.net/channel/${channelMatch[0]}`;
+    }
+    const urlObj = new URL(url);
+    if (YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) && !FEED_PATHNAME_REGEX.test(urlObj.pathname)) {
+      const canonicalUrl = await findCanonicalUrl(url);
+      if (canonicalUrl) {
+        const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
+        if (videoMatch) {
+          return `https://holodex.net/watch/${videoMatch[0]}`;
+        }
+        const channelMatch = canonicalUrl.match(CHANNEL_URL_REGEX);
+        if (channelMatch) {
+          return `https://holodex.net/channel/${channelMatch[0]}`;
+        }
+      }
+    }
+  }
+  return "https://holodex.net";
+}
 
 /**
  * Inject a script onto the page. Script must be
  * accessible via `runtime.getURL` - add it to
  * `accessible` in rollup config first.
  */
-export function inject(scriptPath: string) {
+export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
   el.type = "text/javascript";
-  document.head.appendChild(el);
+  const head = await waitForDOMPredicate(() => document.head)
+  head.appendChild(el);
   return el;
 }
 
@@ -86,23 +128,56 @@ export const svg = (d: string, clazz?: string) => {
   return out;
 };
 
+interface WaitForOptions {
+  root?: Element | Document,
+  timeout?: number,
+}
+
 /**
- * Wait until an element exists by id.
+ * Wait until given "DOM predicate" is satisfied, i.e. returns a truthy value,
+ * and returns a promise that resolves to that truthy value.
+ * The predicate is called immediately with an empty array,
+ * and then for every batch of DOM subtree mutations (via MutationObserver)
+ * until the predicate is satisfied.
+ *
+ * Options:
+ * - root: the element or document to watch for DOM mutations
+ * - timeout: if specified, the promise is rejected after timeout milliseconds
  *
  * Most web apps don't render the whole page at once,
  * so attempting to modify a web app's content at document
- * load will probably fail. This is slightly more reliable.
+ * load will probably fail. This should be more reliable.
  */
-export function waitForElementId(id: string, root: Element | Document | null = null) {
-  return new Promise<Element>((resolve) => {
-    new MutationObserver((mutations, observer) => {
-      const element = document.getElementById(id);
-      if (element) {
+export function waitForDOMPredicate<T>(predicate: (mutations: MutationRecord[]) => T | null, options?: WaitForOptions) {
+  const result = predicate([]);
+  if (result) return Promise.resolve(result);
+  return new Promise<T>((resolve, reject) => {
+    const observer = new MutationObserver((mutations, observer) => {
+      const result = predicate(mutations);
+      if (result) {
         observer.disconnect();
-        resolve(element);
+        resolve(result);
       }
-    }).observe(root ?? document, { childList: true, subtree: true });
+    });
+    observer.observe(options?.root ?? document, { childList: true, subtree: true });
+    const timeout = options?.timeout;
+    if (timeout) {
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`waitForDOMPredicate timed out after ${timeout} msecs`));
+      }, timeout);
+    }
   });
+}
+
+/**
+ * Wait until DOM element with given id exists,
+ * returning a promise that resolves to that element.
+ *
+ * See waitForDOMPredicate for options.
+ */
+export function waitForElementId(id: string, options?: WaitForOptions) {
+  return waitForDOMPredicate<Element>(() => document.getElementById(id), options);
 }
 
 export function validOrigin(origin: string) {

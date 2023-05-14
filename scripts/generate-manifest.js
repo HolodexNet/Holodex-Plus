@@ -19,6 +19,7 @@ const content_scripts = [
 ];
 
 const web_accessible_resources = [
+  "content/yt-watch.inject.js",
   "content/yt-player-overrides.inject.js",
   "content/yt-chat-overrides.inject.js",
   "content/yt-chat-tlsync.inject.js",
