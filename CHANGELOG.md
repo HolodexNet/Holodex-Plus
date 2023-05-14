@@ -1,6 +1,6 @@
 # v0.2
 
-Thanks Lbmaian for majority of these fixes.
+Thanks lbmaian for majority of these fixes.
 
 - Fix regression where Holodex button wasn't matching channel/video ids beginning and/or ending in a dash (-)
 - Fix regression where @handle channels were being treated as channel/video ids if they had exactly 24 or 11, respectively, characters
