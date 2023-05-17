@@ -49,7 +49,7 @@ async function openUrl(url: string) {
     const videoId = currentUrl.searchParams.get("v");
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
-    openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
+    await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
   }
 
   function render(target: Element, debugLabel: string) {
@@ -117,13 +117,15 @@ async function openUrl(url: string) {
   // and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
   runtime.onMessage.addListener((message) => {
     if (message?.command !== "openHolodexUrl") return;
+    console.debug("[Holodex+] handling openHolodexUrl message");
     return Promise.resolve(openHolodexUrl());
   });
 
   async function openHolodexUrl() {
     const url = await getHolodexUrl(window.location.href, findCanonicalUrl)
     if (!url) return null;
-    const newTabOpened = openUrl(url);
+    const newTabOpened = await openUrl(url);
+    console.debug("[Holodex+]", newTabOpened ? "new tab created:" : "updated tab:", url);
     return { url, newTabOpened };
   }
 
