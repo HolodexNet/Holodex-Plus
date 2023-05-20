@@ -1,75 +1,87 @@
-//---------------------------------------   BOUNCING TRANSLATION   -------------------------------------------
-//   BOUNCING INCOMING MESSAGE TO THE LIVE CHAT SUBMITTER 
-var sendBtn: any;
-var ChatText: any;
+import { validOrigin } from "../util";
+import { ProtoframePubsub } from "protoframe";
+import { tlsyncProtocol } from "./tlsync_comm";
 
-function SendTextEnter(inputtext: string){
-	ChatText.textContent = inputtext.replaceAll("\\\"", "\"");
-	ChatText.dispatchEvent(new InputEvent("input"));
-	sendBtn.click();
+//---------------------------------------   SYNC TRANSLATION   -------------------------------------------
+
+// Targets for sending translation automation
+var SendButtonElement: any;
+var InputTextField: any;
+
+var spn = Object.assign(document.createElement("p"), {
+  textContent: "Looking for the chatbox...",
+  style: {
+    fontSize: "15px",
+    background: "black",
+    color: "white",
+    margin: "3px 10px 3px 10px",
+    width: "100%",
+    textAlign: "center",
+  },
+});
+var ExtContainer = Object.assign(document.createElement("div"), { id: "Extcontainer" });
+ExtContainer.appendChild(spn);
+
+function SendTextEnter(inputtext: string) {
+  InputTextField.textContent = inputtext.replaceAll('\\"', '"');
+  InputTextField.dispatchEvent(new InputEvent("input"));
+  SendButtonElement.click();
 }
 
-function LatchChatBox(){
-	sendBtn = document.querySelector("#send-button button",); 
-	ChatText = document.querySelector("#input.yt-live-chat-text-input-field-renderer",);
-	if ((sendBtn == null) || (ChatText == null)) {
-		spn.textContent = "Can't find message input.";
-	} else {
-        spn.textContent = "Synced and ready.";
-        window.addEventListener('message', Bouncer);
-    }
+function setupState(): boolean {
+  SendButtonElement = document.querySelector("#send-button button");
+  InputTextField = document.querySelector("#input.yt-live-chat-text-input-field-renderer");
+  if (SendButtonElement == null || InputTextField == null) {
+    spn.textContent = "Can't find message input.";
+    return false;
+  } else {
+    spn.textContent = "Synced and ready.";
+    return true;
+  }
+}
+
+function LatchChatBox() {
+  // legacy route.
+  setupState();
+  if (SendButtonElement && InputTextField) {
+    window.addEventListener("message", Bouncer);
+  }
 }
 //=============================================================================================================
 
-import { validOrigin } from "../util";
-
-var ChatElementTarget = "chat-messages";
-
-var spn = document.createElement('p');
-spn.textContent = "Looking for the chatbox...";
-spn.style.fontSize = '15px';
-spn.style.background = 'black';
-spn.style.color = 'white';
-spn.style.margin = '3px 10px 3px 10px';
-spn.style.width = "100%"
-spn.style.textAlign = "center";
-
-var ExtContainer = document.createElement('div');
-ExtContainer.id = "Extcontainer";
-ExtContainer.appendChild(spn);
-
-function Bouncer(e : any) {
+function Bouncer(e: any) {
   if (validOrigin(e.origin)) {
     if (e.data.n == "HolodexSync") {
-      if (ChatText) {
+      if (InputTextField) {
         SendTextEnter(e.data.d);
       }
     }
   }
 }
 
-function Initializator(e : any) {
+function Initializator(e: any) {
   if (validOrigin(e.origin)) {
     if (e.data.n == "HolodexSync") {
       if (e.data.d == "Initiate") {
         var i = 0;
         const intv = setInterval(() => {
-            i++;
-            var target = document.getElementById(ChatElementTarget);
-            if (target != null){
-                if (document.getElementById("Extcontainer") != null){
-                    var ExtcontainerTemp = document.getElementById("Extcontainer");
-                    if (ExtcontainerTemp != null) {
-                      ExtcontainerTemp.parentNode?.removeChild(ExtcontainerTemp);
-                    }                    
-                }
-                target.prepend(ExtContainer);
-                window.removeEventListener('message', Initializator);
-                LatchChatBox();
-                clearInterval(intv);
-            } if (i == 30){
-                clearInterval(intv);
+          i++;
+          var target = document.getElementById("chat-messages");
+          if (target != null) {
+            // reset the previous
+            const prevExtContainer = document.getElementById("Extcontainer");
+            if (prevExtContainer) {
+              prevExtContainer.parentNode?.removeChild(prevExtContainer);
             }
+
+            target.prepend(ExtContainer);
+            window.removeEventListener("message", Initializator);
+            LatchChatBox();
+            clearInterval(intv);
+          }
+          if (i == 30) {
+            clearInterval(intv);
+          }
         }, 1000);
       }
     }
@@ -78,8 +90,27 @@ function Initializator(e : any) {
 
 function Load() {
   if (window.location != parent.location) {
-    window.addEventListener('message', Initializator);
+    window.addEventListener("message", Initializator);
   }
 }
 
 Load();
+
+const manager = ProtoframePubsub.iframe(tlsyncProtocol);
+
+manager.handleAsk("initiate", (body): Promise<{ state: "ok" | "failed" }> => {
+  console.log("Holodex+ TL Sync Initiation Requested in frame ", window.location, new Date());
+  if (body?.info) console.debug(body.info);
+
+  if (setupState()) {
+    return Promise.resolve({ state: "ok" });
+  } else {
+    return Promise.resolve({ state: "failed" });
+  }
+});
+
+manager.handleTell("sendMessage", (body) => {
+  console.log("Holodex+ TL Sync Relay Received Message of:", body.text, "in frame", window.location, "at", new Date());
+  SendTextEnter(body.text);
+});
+

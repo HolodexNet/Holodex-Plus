@@ -2786,6 +2786,11 @@ process-warning@^1.0.0:
   resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-1.0.0.tgz#980a0b25dc38cd6034181be4b7726d89066b4616"
   integrity sha512-du4wfLyj4yCZq1VupnVSZmRsPJsNuxoDQFdCFHLaYiEbFBD7QE0a+I4D7hOxrVnh78QE/YipFAj9lXHiXocV+Q==
 
+protoframe@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/protoframe/-/protoframe-1.1.1.tgz#492c6d9abfe7e785a12e2c6ccc2a1bb6191efee8"
+  integrity sha512-BkCfi0RWF/Ib4N45RF4xk4i3hd0hnrOLjhl8Yp8JmXprnT8+qK6Ds7KEASPh/q0c8+Xs9N7Qt5zKO7p/XeVcag==
+
 psl@^1.1.28:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/psl/-/psl-1.8.0.tgz#9326f8bcfb013adcc005fdff056acce020e51c24"
