@@ -90,11 +90,14 @@ async function openHolodexUrl(tab: Tabs.Tab) {
   try {
     const result = await tabs.sendMessage(tab.id!, { command: "openHolodexUrl" });
     if (result) {
-      // There's no 100% reliable way to get the tab id of a newly opened tab,
-      // so don't bother to try fetching that new tab, especially just for debug logging.
+      // There's no 100% reliable way to get the tab id of a newly opened tab created from content/page script,
+      // so don't bother to try fetching that new tab just for debug logging.
       console.debug(result.newTabOpened ? "new tab created" : "updated tab", "from content script:", result.url);
+    } else {
+      console.debug("no new/updated tab for:", tab.url);
     }
   } catch (e) {
+    console.debug("(fallback) due to:", e);
     fallbackOpenHolodexUrl(tab);
   }
 }
@@ -113,7 +116,10 @@ async function fallbackOpenHolodexUrl(tab: Tabs.Tab) {
     console.debug("(fallback) found canonical URL:", canonicalUrl);
     return canonicalUrl;
   });
-  if (!url) return;
+  if (!url) {
+    console.debug("(fallback) no new/updated tab for:", tab.url);
+    return;
+  }
   if (await Options.get("openHolodexInNewTab")) {
     const createProps: Tabs.CreateCreatePropertiesType = {
       url,
