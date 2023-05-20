@@ -10,15 +10,19 @@ var InputTextField: any;
 
 var spn = Object.assign(document.createElement("p"), {
   textContent: "Looking for the chatbox...",
-  style: {
-    fontSize: "15px",
-    background: "black",
-    color: "white",
-    margin: "3px 10px 3px 10px",
-    width: "100%",
-    textAlign: "center",
+  onmouseover(evt: any) {
+    evt.target.style.opacity = "1";
+  },
+  onmouseout(evt: any) {
+    evt.target.style.opacity = "0.4";
   },
 });
+spn.style.color = "white";
+spn.style.opacity = "0.4";
+spn.style.width = "calc(100% - 32px)";
+spn.style.position = "absolute";
+spn.style.textAlign = "center";
+
 var ExtContainer = Object.assign(document.createElement("div"), { id: "Extcontainer" });
 ExtContainer.appendChild(spn);
 
@@ -32,10 +36,10 @@ function setupState(): boolean {
   SendButtonElement = document.querySelector("#send-button button");
   InputTextField = document.querySelector("#input.yt-live-chat-text-input-field-renderer");
   if (SendButtonElement == null || InputTextField == null) {
-    spn.textContent = "Can't find message input.";
+    spn.textContent = "Holodex+ TL Relay [⚠️cannot find message input]";
     return false;
   } else {
-    spn.textContent = "Synced and ready.";
+    spn.textContent = "Holodex+ TL Relay [✅Connected]";
     return true;
   }
 }
@@ -101,6 +105,9 @@ const manager = ProtoframePubsub.iframe(tlsyncProtocol);
 manager.handleAsk("initiate", (body): Promise<{ state: "ok" | "failed" }> => {
   console.log("Holodex+ TL Sync Initiation Requested in frame ", window.location, new Date());
   if (body?.info) console.debug(body.info);
+
+  const tgt = document.getElementById("chat-messages");
+  if (!tgt?.contains(ExtContainer)) tgt?.prepend(ExtContainer);
 
   if (setupState()) {
     return Promise.resolve({ state: "ok" });
