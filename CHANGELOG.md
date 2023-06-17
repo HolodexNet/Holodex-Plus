@@ -1,3 +1,7 @@
+# v0.3.2
+
+- Bugfixed only sending every other message in TLDex Relay
+
 # v0.3
 
 - Bugfixed Firefox opens two windows problem.

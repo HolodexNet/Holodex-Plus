@@ -2,7 +2,6 @@
 
 Holodex Companion Extension.
 
-
 ### [Changelog](https://github.com/HolodexNet/Holodex-Plus/blob/dev/CHANGELOG.md)
 
 ### Local development (Chrome)
@@ -10,6 +9,8 @@ Holodex Companion Extension.
 ```bash
 yarn
 yarn dev # watch ts files
+
+#in another pane
 yarn dev:chrome # launch chrome
 ```
 
@@ -32,6 +33,8 @@ To open devtools for:
 ```bash
 yarn
 yarn dev # watch ts files
+
+# in another pane
 yarn dev:firefox # launch firefox
 ```
 
@@ -40,3 +43,11 @@ Reloading works the same way as in Chrome, but devtools works a bit differently 
 Just like in Chrome, `options` can also be inspected normally by opening devtools on the options page, and content scripts output their logs into the opened page's devtools console.
 
 You can inspect the sources of `popup` by opening the `Debugger` tab in the inspection tool, and selecting the source file on the left side.
+
+### Publishing:
+
+```bash
+yarn dist
+```
+
+To build the published extension. The zip file will be put into the `dist/` folder.

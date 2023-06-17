@@ -29,7 +29,9 @@ ExtContainer.appendChild(spn);
 function SendTextEnter(inputtext: string) {
   InputTextField.textContent = inputtext.replaceAll('\\"', '"');
   InputTextField.dispatchEvent(new InputEvent("input"));
-  SendButtonElement.click();
+  setTimeout(() => {
+    SendButtonElement.click();
+  }, 50);
 }
 
 function setupState(): boolean {
