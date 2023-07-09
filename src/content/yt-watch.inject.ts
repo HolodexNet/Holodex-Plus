@@ -24,13 +24,15 @@ document.addEventListener("yt-page-data-fetched", (evt: any) => {
 
 // Initialize page data from yt* global vars in case above event hasn't fired yet
 // by the time yt-watch's openHolodexUrl is received.
+// Since not all YT pages have above expected YT globals (including popout live chat and music.youtube.com),
+// don't throw errors if the expected global vars aren't found.
 function pageDataFromYtGlobals() {
   const page = globals.ytPageType;
   if (!page)
-    throw "[Holodex+] could not find global ytPageType";
+    return console.log("[Holodex+] could not find global ytPageType");
   const response = globals.ytInitialData;
   if (!response)
-    throw "[Holodex+] could not find global ytInitialData";
+    return console.log("[Holodex+] could not find global ytInitialData");
   const playerResponse = globals.ytInitialPlayerResponse;
   return {
     page,
@@ -43,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.debug("[Holodex+] DOMContentLoaded");
   if (pageData) return;
   pageData = pageDataFromYtGlobals();
-  sendPageData(pageData, "DOMContentLoaded yt* global vars");
+  if (pageData) sendPageData(pageData, "DOMContentLoaded yt* global vars");
 });
 
 console.log("[Holodex+] page script injected");
