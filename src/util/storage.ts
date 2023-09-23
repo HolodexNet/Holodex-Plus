@@ -3,16 +3,12 @@ import { storage } from "webextension-polyfill";
 // To add something to options, just add it to `schema`
 const schema = {
   // key: default-value
-  remoteLikeButton: true,
-  openInHolodexButton: false,
-  openHolodexInNewTab: true
-
+  remoteYoutubeLikeButton: true,
+  holodexButtonInYoutube: false,
+  openHolodexInNewTab: true,
 };
 type Schema = typeof schema;
-const descriptions: Partial<Record<keyof Schema, string>> = {
-  openInHolodexButton:
-    "Add a Open in Holodex button to Youtube"
-};
+const descriptions: Partial<Record<keyof Schema, string>> = {};
 
 export const Options = {
   /** Get the options storage schema */

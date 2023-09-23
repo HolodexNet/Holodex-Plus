@@ -14,6 +14,9 @@ import { mdiHelp } from "@mdi/js";
           splitOnUpperCase(name)
             .map((f, i) => (i === 0 ? f.substring(0, 1).toUpperCase() + f.substring(1) : f.toLowerCase()))
             .join(" ")
+            .replace("like", "Like")
+            .replace("holodex", "Holodex")
+            .replace("youtube", "YouTube")
         )
       );
       const desc = Options.description(name);
