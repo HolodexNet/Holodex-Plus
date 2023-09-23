@@ -6,19 +6,19 @@
 }
 
 .yt-watch-holodex-btn-light {
-  background-color: #f2f2f2;
+  background-color: #f2f2f2 !important;
 }
 
 .yt-watch-holodex-btn-light:hover {
-  background-color: #e5e5e5;
+  background-color: #e5e5e5 !important;
 }
 
 .yt-watch-holodex-btn-dark {
-  background-color: #272727;
+  background-color: #272727 !important;
 }
   
 .yt-watch-holodex-btn-dark:hover {
-  background-color: #3f3f3f;
+  background-color: #3f3f3f !important;
 }
 
 .yt-watch-holodex-icon {
