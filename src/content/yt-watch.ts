@@ -66,17 +66,24 @@ async function openUrl(url: string) {
     container.title = "Open in Holodex";
     container.addEventListener("click", openHolodex);
 
-    container.innerHTML = `
-    <div class="yt-touch-feedback-shape yt-spec-button-shape-next yt-spec-button-shape-next--size-m yt-watch-holodex-btn">
+    const shape = document.createElement("div");
+    shape.classList.add(
+      "yt-touch-feedback-shape",
+      "yt-spec-button-shape-next",
+      "yt-spec-button-shape-next--size-m",
+      "yt-watch-holodex-btn"
+    );
+
+    shape.innerHTML = `
       ${holodexIcon}
       <span class="yt-watch-holodex-label">Holodex</span>
-    </div>
     `;
 
     const dark = document.documentElement.hasAttribute("dark");
-    if (dark) { container.children[0].classList.add("yt-watch-holodex-btn-dark") }
-    else { container.children[0].classList.add("yt-watch-holodex-btn-light") }
+    if (dark) { shape.classList.add("yt-watch-holodex-btn-dark") }
+    else { shape.classList.add("yt-watch-holodex-btn-light") }
 
+    container.appendChild(shape);
     target.appendChild(container);
     rendered = true;
   }
