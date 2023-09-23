@@ -25,7 +25,7 @@ async function openUrl(url: string) {
 
 // Holodex button injected into YT pages
 (async () => {
-  if (!(await Options.get("openInHolodexButton"))) return;
+  if (!(await Options.get("holodexButtonInYoutube"))) return;
 
   const holodexIcon = `
   <svg class="yt-watch-holodex-icon" viewBox="10.646699905395508 4.526976108551025 18.35555076599121 17.86052703857422" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,21 +58,32 @@ async function openUrl(url: string) {
       container.remove();
     }
 
-    const container = document.createElement("a");
-    container.id = "yt-watch-holodex-btn-container";
+    const container = document.createElement("yt-watch-holodex-btn-container");
     container.style.textDecoration = "none";
     container.style.cursor = "pointer";
-    container.style.marginLeft = "6px";
+    container.style.marginLeft = "8px";
+    container.style.borderRadius = "inherit"
     container.title = "Open in Holodex";
     container.addEventListener("click", openHolodex);
 
-    container.innerHTML = `
-<div class="yt-watch-holodex-btn">
-  ${holodexIcon}
-  <span class="yt-watch-holodex-label">Holodex</span>
-</div>
+    const shape = document.createElement("div");
+    shape.classList.add(
+      "yt-touch-feedback-shape",
+      "yt-spec-button-shape-next",
+      "yt-spec-button-shape-next--size-m",
+      "yt-watch-holodex-btn"
+    );
+
+    shape.innerHTML = `
+      ${holodexIcon}
+      <span class="yt-watch-holodex-label">Holodex</span>
     `;
 
+    const dark = document.documentElement.hasAttribute("dark");
+    if (dark) { shape.classList.add("yt-watch-holodex-btn-dark") }
+    else { shape.classList.add("yt-watch-holodex-btn-light") }
+
+    container.appendChild(shape);
     target.appendChild(container);
     rendered = true;
   }

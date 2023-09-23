@@ -53,9 +53,9 @@ export default ({ icons }) =>
         default_title: "Open in Holodex",
       },
       options_ui: {
-        browser_style: true,
+        browser_style: false,
         page: "options/index.html",
-        open_in_tab: true,
+        open_in_tab: false,
       },
     },
     null,

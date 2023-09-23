@@ -7,7 +7,7 @@ if (videoId) {
 window.addEventListener("message", async (event) => {
   if (validOrigin(event.origin)) {
     if (event.data?.event === "likeVideo") {
-      if (!(await Options.get("remoteLikeButton"))) return;
+      if (!(await Options.get("remoteYoutubeLikeButton"))) return;
       console.log("[Holodex+] Liking the video");
       const res = await like();
       res ? ipc.send("liked") : ipc.send("failed");
