@@ -1,3 +1,7 @@
+# v0.4
+
+- Xangel made the option menu even better for HolodexPlus, and one of these adds a holodex button on youtube. Check it out!
+
 # v0.3.2
 
 - Bugfixed only sending every other message in TLDex Relay
