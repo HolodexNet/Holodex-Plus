@@ -1,24 +1,13 @@
 .yt-watch-holodex-btn {
+  background-color: var(--yt-spec-additive-background) !important;
   vertical-align: middle;
   white-space: nowrap;
   display: flex;
   align-items: center;
 }
 
-.yt-watch-holodex-btn-light {
-  background-color: #f2f2f2 !important;
-}
-
-.yt-watch-holodex-btn-light:hover {
-  background-color: #e5e5e5 !important;
-}
-
-.yt-watch-holodex-btn-dark {
-  background-color: #272727 !important;
-}
-  
-.yt-watch-holodex-btn-dark:hover {
-  background-color: #3f3f3f !important;
+.yt-watch-holodex-btn:hover {
+  background-color: var(--yt-spec-mono-tonal-hover) !important;
 }
 
 .yt-watch-holodex-icon {
@@ -45,5 +34,9 @@
 @media screen and (max-width: 1200px) {
   .yt-watch-holodex-label {
     display: none;
+  }
+
+  .yt-watch-holodex-icon {
+    margin-right: 0px;
   }
 }

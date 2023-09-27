@@ -78,11 +78,7 @@ async function openUrl(url: string) {
       ${holodexIcon}
       <span class="yt-watch-holodex-label">Holodex</span>
     `;
-
-    const dark = document.documentElement.hasAttribute("dark");
-    if (dark) { shape.classList.add("yt-watch-holodex-btn-dark") }
-    else { shape.classList.add("yt-watch-holodex-btn-light") }
-
+    
     container.appendChild(shape);
     target.appendChild(container);
     rendered = true;
