@@ -59,17 +59,22 @@ async function openUrl(url: string) {
     }
 
     const container = document.createElement("yt-watch-holodex-btn-container");
+    container.classList.add(
+      "style-scope",
+      "ytd-menu-renderer"
+    );
     container.style.textDecoration = "none";
     container.style.cursor = "pointer";
     container.style.marginLeft = "8px";
-    container.style.borderRadius = "inherit"
-    container.title = "Open in Holodex";
+    container.style.borderRadius = "inherit";
     container.addEventListener("click", openHolodex);
 
     const shape = document.createElement("div");
     shape.classList.add(
       "yt-touch-feedback-shape",
       "yt-spec-button-shape-next",
+      "yt-spec-button-shape-next--tonal",
+      "yt-spec-button-shape-next--mono",
       "yt-spec-button-shape-next--size-m",
       "yt-watch-holodex-btn"
     );
@@ -78,8 +83,12 @@ async function openUrl(url: string) {
       ${holodexIcon}
       <span class="yt-watch-holodex-label">Holodex</span>
     `;
-    
+
+    const tooltip = document.createElement("tp-yt-paper-tooltip");
+    tooltip.innerHTML = `Open in Holodex`;
+
     container.appendChild(shape);
+    container.appendChild(tooltip);
     target.appendChild(container);
     rendered = true;
   }

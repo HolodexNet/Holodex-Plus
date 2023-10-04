@@ -1,13 +1,8 @@
 .yt-watch-holodex-btn {
-  background-color: var(--yt-spec-additive-background) !important;
   vertical-align: middle;
   white-space: nowrap;
   display: flex;
   align-items: center;
-}
-
-.yt-watch-holodex-btn:hover {
-  background-color: var(--yt-spec-mono-tonal-hover) !important;
 }
 
 .yt-watch-holodex-icon {
