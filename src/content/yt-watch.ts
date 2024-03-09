@@ -47,15 +47,8 @@ async function openUrl(url: string) {
   async function openHolodex() {
     const currentUrl = new URL(window.location.href);
     const regex = new RegExp(/^\/shorts\/.+$/);
-    
-    let videoId: string | null;
-    if (regex.test(currentUrl.pathname)) {
-      const splitPath = currentUrl.pathname.split('/');
-      videoId = splitPath[2];
-    } else {
-      videoId = currentUrl.searchParams.get("v");
-    }
 
+    const videoId = regex.test(currentUrl.pathname) ? currentUrl.pathname.split('/')[2] : currentUrl.searchParams.get("v");
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
     await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
