@@ -8,7 +8,6 @@
 .yt-watch-holodex-icon {
   width: 20px;
   height: 20px;
-  margin-right: 6px;
 }
 
 .yt-watch-holodex-icon path:nth-child(1) {
@@ -26,12 +25,26 @@
   stroke: #5da2f2;
 }
 
+ytd-holodex-button-renderer {
+  display: inline-block;
+}
+
+yt-holodex-button-shape {
+  display: -moz-box;
+  display: flex;
+  -moz-box-flex: 1;
+  flex: 1;
+  flex-basis: 0.000000001px
+}
+
+#holodex-button tp-yt-paper-tooltip:not(#tooltip.hidden) {
+  inset: auto 68px auto auto !important;
+}
+
 @media screen and (max-width: 1200px) {
   .yt-watch-holodex-label {
     display: none;
   }
-
-  .yt-watch-holodex-icon {
-    margin-right: 0px;
-  }
 }
+
+/* https://www.youtube.com/shorts/7KfQUlJAAEE */

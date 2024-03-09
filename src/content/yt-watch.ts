@@ -34,6 +34,9 @@ async function openUrl(url: string) {
   </svg>
   `;
 
+  const currentUrl = new URL(window.location.href);
+  const shortsRegex = new RegExp(/^\/shorts\/.+$/);
+  let shortsPage = false;
   let rendered = false;
 
   // This fires on both new page (re)load and internal navigation to another page
@@ -41,14 +44,12 @@ async function openUrl(url: string) {
   // allowing it to clear the rendered flag.
   document.addEventListener("yt-navigate-finish", (evt: any) => {
     console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
+    shortsPage = shortsRegex.test(currentUrl.pathname);
     rendered = false;
   });
 
   async function openHolodex() {
-    const currentUrl = new URL(window.location.href);
-    const regex = new RegExp(/^\/shorts\/.+$/);
-
-    const videoId = regex.test(currentUrl.pathname) ? currentUrl.pathname.split('/')[2] : currentUrl.searchParams.get("v");
+    const videoId = shortsPage ? currentUrl.pathname.split('/')[2] : currentUrl.searchParams.get("v");
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
     await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
@@ -56,42 +57,69 @@ async function openUrl(url: string) {
 
   function render(target: Element, debugLabel: string) {
     console.debug("[Holodex+] (re)rendering Holodex button within", debugLabel, target);
-    for (const container of document.querySelectorAll("#yt-watch-holodex-btn-container")) {
+    for (const container of document.querySelectorAll("#holodex-button")) {
       container.remove();
     }
 
-    const container = document.createElement("yt-watch-holodex-btn-container");
-    container.classList.add(
-      "style-scope",
-      "ytd-menu-renderer"
-    );
-    container.style.textDecoration = "none";
-    container.style.cursor = "pointer";
-    container.style.marginLeft = "8px";
-    container.style.borderRadius = "inherit";
+    let ytElement = shortsPage ? document.getElementById("share-button") : target.querySelector("yt-button-view-model");
+    if (!ytElement) return;
+
+    const replaceValues = {
+      "<!--css-build:shady-->": "",
+      "<ytd-": "<ytd-holodex-",
+      "</ytd-": "</ytd-holodex-",
+      "<yt-": "<yt-holodex-",
+      "</yt-": "</yt-holodex-",
+    }
+
+    const container = document.createElement(shortsPage ? "div" : "yt-watch-holodex-btn-container");
+    container.setAttribute("id", "holodex-button");
+    container.className = ytElement.className;
+    container.innerHTML = ytElement.innerHTML;
+    for (const [searchValue, replaceValue] of Object.entries(replaceValues)) {
+      container.innerHTML = container.innerHTML.replaceAll(searchValue, replaceValue);
+    }
     container.addEventListener("click", openHolodex);
+    
+    const ytButton = container.querySelector("button");
+    if (!ytButton) return;
+    
+    const button = document.createElement("button");
+    button.className = ytButton.className;
+    button.classList.add("yt-watch-holodex-btn");
+    button.setAttribute("arial-label", "Open in Holodex");
+    button.innerHTML = `${holodexIcon}`;
+    
+    const label = document.createElement("span");
+    label.textContent = "Holodex";
 
-    const shape = document.createElement("div");
-    shape.classList.add(
-      "yt-touch-feedback-shape",
-      "yt-spec-button-shape-next",
-      "yt-spec-button-shape-next--tonal",
-      "yt-spec-button-shape-next--mono",
-      "yt-spec-button-shape-next--size-m",
-      "yt-watch-holodex-btn"
-    );
+    if (shortsPage) {
+      const ytLabel = container.querySelector("span");
+      if (!ytLabel) return;
 
-    shape.innerHTML = `
-      ${holodexIcon}
-      <span class="yt-watch-holodex-label">Holodex</span>
-    `;
+      label.className = ytLabel.className;
 
-    const tooltip = document.createElement("tp-yt-paper-tooltip");
-    tooltip.innerHTML = `Open in Holodex`;
+      const ytTooltip  = container.querySelector("tp-yt-paper-tooltip");
+      if (!ytTooltip) return;
+      const tooltip = ytTooltip.cloneNode() as HTMLElement;
+      if (!tooltip) return;
+      
+      tooltip.textContent = "Open in Holodex";
 
-    container.appendChild(shape);
-    container.appendChild(tooltip);
-    target.appendChild(container);
+      ytLabel.replaceWith(label);
+      ytTooltip.replaceWith(tooltip);
+    } else {
+      container.style.marginLeft = "8px";
+      button.setAttribute("title", "Open in Holodex");
+      label.classList.add("yt-watch-holodex-label");
+      label.style.marginLeft = "8px";
+      
+      button.appendChild(label)
+    }
+
+    ytButton.replaceWith(button);
+    shortsPage ? target.insertBefore(container, target.firstChild) : target.appendChild(container);
+
     rendered = true;
   }
 
@@ -110,11 +138,12 @@ async function openUrl(url: string) {
 
     // Setup mutation observer to (re)render when #top-level-buttons-computed is added,
     // both for new page (re)load and internal navigation to another page.
+    const topLevelButtonsComputed = "top-level-buttons-computed";
     new MutationObserver((mutations: MutationRecord[]) => {
       if (rendered) return;
       for (const mutation of mutations) {
         const target = mutation.target as Element;
-        if (target.id !== "top-level-buttons-computed") continue;
+        if (target.id !== topLevelButtonsComputed) continue;
         render(target, "MutationObserver-detected");
         break;
       }
@@ -122,8 +151,13 @@ async function openUrl(url: string) {
 
     // If #actions already contains #top-level-buttons-computed, render immediately.
     // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
-    const target = actions.querySelector("#top-level-buttons-computed");
-    if (target) render(target, "already existing");
+    if (!shortsPage) {
+      const target = actions.querySelector("#" + topLevelButtonsComputed);
+      if (target) render(target, "already existing");
+      return;
+    }
+
+    render(actions, "already existing");
   });
 })();
 
