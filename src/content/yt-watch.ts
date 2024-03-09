@@ -34,35 +34,41 @@ async function openUrl(url: string) {
   </svg>
   `;
 
-  const currentUrl = new URL(window.location.href);
-  const shortsRegex = new RegExp(/^\/shorts\/.+$/);
+  let pageType: string;
   let shortsPage = false;
   let rendered = false;
 
   // This fires on both new page (re)load and internal navigation to another page
   // (yt-page-data-fetched and other events also fire but before navigation finishes),
   // allowing it to clear the rendered flag.
-  document.addEventListener("yt-navigate-finish", (evt: any) => {
+  document.addEventListener("yt-navigate-finish", async (evt: any) => {
     console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
-    shortsPage = shortsRegex.test(currentUrl.pathname);
+    pageType = evt.detail.pageType;
+    shortsPage = (pageType === "shorts");
     rendered = false;
   });
 
   async function openHolodex() {
+    const currentUrl = new URL(window.location.href);
     const videoId = shortsPage ? currentUrl.pathname.split('/')[2] : currentUrl.searchParams.get("v");
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
     await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
   }
 
+  function nodeNotFoundError(node: string) {
+    return new Error("[Holodex+] unexpectedly could not find " + node);
+  }
+
   function render(target: Element, debugLabel: string) {
     console.debug("[Holodex+] (re)rendering Holodex button within", debugLabel, target);
+    for (const container of document.querySelectorAll("#holodex-button")) {
     for (const container of document.querySelectorAll("#holodex-button")) {
       container.remove();
     }
 
     let ytElement = shortsPage ? document.getElementById("share-button") : target.querySelector("yt-button-view-model");
-    if (!ytElement) return;
+    if (!ytElement) throw nodeNotFoundError("share-button or yt-button-view-model");
 
     const replaceValues = {
       "<!--css-build:shady-->": "",
@@ -82,7 +88,7 @@ async function openUrl(url: string) {
     container.addEventListener("click", openHolodex);
     
     const ytButton = container.querySelector("button");
-    if (!ytButton) return;
+    if (!ytButton) throw nodeNotFoundError("button");
     
     const button = document.createElement("button");
     button.className = ytButton.className;
@@ -95,12 +101,12 @@ async function openUrl(url: string) {
 
     if (shortsPage) {
       const ytLabel = container.querySelector("span");
-      if (!ytLabel) return;
+      if (!ytLabel) throw nodeNotFoundError("span");
 
       label.className = ytLabel.className;
 
       const ytTooltip  = container.querySelector("tp-yt-paper-tooltip");
-      if (!ytTooltip) return;
+      if (!ytTooltip) throw nodeNotFoundError("tp-yt-paper-tooltip");
       const tooltip = ytTooltip.cloneNode() as HTMLElement;
       if (!tooltip) return;
       
@@ -151,13 +157,12 @@ async function openUrl(url: string) {
 
     // If #actions already contains #top-level-buttons-computed, render immediately.
     // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
-    if (!shortsPage) {
-      const target = actions.querySelector("#" + topLevelButtonsComputed);
+    if (pageType === "shorts") {
+      render(actions, "already existing");
+    } else if (pageType === "watch") {
+      const target = actions.querySelector("#top-level-buttons-computed");
       if (target) render(target, "already existing");
-      return;
     }
-
-    render(actions, "already existing");
   });
 })();
 
