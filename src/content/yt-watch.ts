@@ -46,7 +46,16 @@ async function openUrl(url: string) {
 
   async function openHolodex() {
     const currentUrl = new URL(window.location.href);
-    const videoId = currentUrl.searchParams.get("v");
+    const regex = new RegExp(/^\/shorts\/.+$/);
+    
+    let videoId: string | null;
+    if (regex.test(currentUrl.pathname)) {
+      const splitPath = currentUrl.pathname.split('/');
+      videoId = splitPath[2];
+    } else {
+      videoId = currentUrl.searchParams.get("v");
+    }
+
     // TODO: Holodex watch page doesn't actually support the t param yet...
     const t = currentUrl.searchParams.get("t");
     await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
@@ -182,17 +191,17 @@ async function openUrl(url: string) {
   inject("content/yt-watch.inject.js");
 
   function getCanonicalUrlFromData(pageData: any) {
-    // Note: Not using pageData.url since it can e.g. be live/<video_id> which is not canonical.
+    // Note: Not using pageData.url since it can e.g. be live/<videoId> which is not canonical.
     // Following should be compatible with the fallback fetch in the background script,
     // that is, the first canonical URL found on the page.
     let canonicalUrl: string | null = null;
     switch (pageData.page) {
       case "watch":
       case "shorts":
-        const video_id = pageData.playerResponse?.videoDetails?.videoId;
-        if (video_id) {
-          // Technically, shorts canonical URL should /shorts/<video_id> but watch page works.
-          canonicalUrl = "https://www.youtube.com/watch?v=" + video_id;
+        const videoId = pageData.playerResponse?.videoDetails?.videoId;
+        if (videoId) {
+          // Technically, shorts canonical URL should /shorts/<videoId> but watch page works.
+          canonicalUrl = "https://www.youtube.com/watch?v=" + videoId;
         }
         break;
       case "channel":
