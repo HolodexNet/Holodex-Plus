@@ -63,7 +63,6 @@ async function openUrl(url: string) {
   function render(target: Element, debugLabel: string) {
     console.debug("[Holodex+] (re)rendering Holodex button within", debugLabel, target);
     for (const container of document.querySelectorAll("#holodex-button")) {
-    for (const container of document.querySelectorAll("#holodex-button")) {
       container.remove();
     }
 
