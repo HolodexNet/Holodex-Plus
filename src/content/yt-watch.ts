@@ -41,7 +41,7 @@ async function openUrl(url: string) {
   // This fires on both new page (re)load and internal navigation to another page
   // (yt-page-data-fetched and other events also fire but before navigation finishes),
   // allowing it to clear the rendered flag.
-  document.addEventListener("yt-navigate-finish", async (evt: any) => {
+  document.addEventListener("yt-navigate-finish", (evt: any) => {
     console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
     pageType = evt.detail.pageType;
     shortsPage = (pageType === "shorts");
