@@ -143,12 +143,11 @@ async function openUrl(url: string) {
 
     // Setup mutation observer to (re)render when #top-level-buttons-computed is added,
     // both for new page (re)load and internal navigation to another page.
-    const topLevelButtonsComputed = "top-level-buttons-computed";
     new MutationObserver((mutations: MutationRecord[]) => {
       if (rendered) return;
       for (const mutation of mutations) {
         const target = mutation.target as Element;
-        if (target.id !== topLevelButtonsComputed) continue;
+        if (target.id !== "top-level-buttons-computed") continue;
         render(target, "MutationObserver-detected");
         break;
       }
