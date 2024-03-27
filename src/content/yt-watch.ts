@@ -1,5 +1,5 @@
 import { Options, inject, getHolodexUrl, searchObject, CANONICAL_URL_REGEX } from "src/util";
-import { action, runtime } from "webextension-polyfill";
+import { runtime } from "webextension-polyfill";
 
 // This is an external JS lib without typing (d.ts), so need the @ts-ignore
 // @ts-ignore
