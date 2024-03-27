@@ -81,25 +81,6 @@ async function openUrl(url: string) {
     await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
   }
 
-  function getActions() {
-    const ytdApp = document.querySelector("ytd-app");
-    if (!ytdApp) throw nodeNotFoundError("ytd-app");
-
-    let actions, ytdReelVideoRenderer;
-    if (shortsPage) {
-      ytdReelVideoRenderer = ytdApp.querySelector("ytd-reel-video-renderer[is-active]");
-      if (!ytdReelVideoRenderer) throw nodeNotFoundError("ytd-reel-video-renderer");
-      console.debug("[Holodex+] found ytd-reel-video-renderer:", ytdReelVideoRenderer);
-
-      actions = ytdReelVideoRenderer.querySelector("#actions");
-    } else {
-      actions = ytdApp.querySelector("#actions");
-    }
-    if (!actions) throw nodeNotFoundError("#actions");
-    console.debug("[Holodex+] found #actions:", actions);
-    return actions;
-  }
-
   function render(target: Element) {
     console.debug("[Holodex+] (re)rendering Holodex button within", target);
     for (const container of document.querySelectorAll("#holodex-button")) {
