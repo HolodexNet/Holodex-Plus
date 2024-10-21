@@ -49,7 +49,7 @@ export default ({ icons }) => {
     description: pkg.description,
     icons,
     background: {
-      service_worker: "background/index.ts",
+      page: "background/index.ts",
     },
     permissions,
     content_scripts,
