@@ -1,5 +1,5 @@
 import { inject, validOrigin } from "@src/utils";
-import injectPath from "./yt-chat-inject?script&module";
+import injectPath from "./inject?script&module";
 import { ProtoframePubsub } from "protoframe";
 import { tlsyncProtocol } from "./tlsyncProtocol";
 
