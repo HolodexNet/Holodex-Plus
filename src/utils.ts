@@ -123,7 +123,8 @@ export async function getHolodexUrl(
 export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
-  el.type = "text/javascript";
+  // el.type = "text/javascript";
+  el.type = "module";
   const head = await waitForDOMPredicate(() => document.head);
   head.appendChild(el);
   return el;

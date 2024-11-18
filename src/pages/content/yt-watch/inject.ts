@@ -1,4 +1,4 @@
-const globals = window;
+// const globals = window;
 
 // Broadcast page data for yt-watch's openHolodexUrl usage.
 function sendPageData(pageData: unknown, pageDataLabel: string) {
@@ -32,16 +32,16 @@ document.addEventListener("yt-page-data-fetched", (evt: any) => {
 // don't throw errors if the expected global vars aren't found.
 function pageDataFromYtGlobals() {
   // @ts-expect-error "ytPageType" is a YT global
-  const page = globals.ytPageType;
+  const page = window.ytPageType;
   if (!page) return console.log("[Holodex+] could not find global ytPageType");
 
   // @ts-expect-error "ytInitialData" is a YT global
-  const response = globals.ytInitialData;
+  const response = window.ytInitialData;
   if (!response)
     return console.log("[Holodex+] could not find global ytInitialData");
 
   // @ts-expect-error "ytInitialPlayerResponse" is a YT global
-  const playerResponse = globals.ytInitialPlayerResponse;
+  const playerResponse = window.ytInitialPlayerResponse;
   return {
     page,
     response,

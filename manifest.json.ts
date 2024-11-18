@@ -48,6 +48,12 @@ const manifest = {
       all_frames: true,
       run_at: "document_end",
     },
+    {
+      matches: ["*://*.youtube.com/embed/*"],
+      js: ["src/pages/content/yt-player/contentScript.ts"],
+      all_frames: true,
+      run_at: "document_start",
+    },
   ],
   web_accessible_resources: [
     {
