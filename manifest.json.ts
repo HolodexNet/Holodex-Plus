@@ -1,6 +1,6 @@
 import type { ManifestV3Export } from "@crxjs/vite-plugin";
 
-const manifest = ({
+const manifest = {
   manifest_version: 3,
   version: "<placeholder>",
   name: "Holodex Plus",
@@ -37,12 +37,27 @@ const manifest = ({
       css: ["contentStyle.css"],
     },
     {
-      matches: ["*://*.youtube.com/live_chat*"], js: ["src/pages/content/yt-chat/yt-chat.ts"], all_frames: true, run_at: "document_end",
-    }
+      matches: ["*://*.youtube.com/live_chat*"],
+      js: ["src/pages/content/yt-chat/yt-chat.ts"],
+      all_frames: true,
+      run_at: "document_end",
+    },
+    {
+      matches: ["*://*.youtube.com/*"],
+      js: ["src/pages/content/yt-watch/yt-watch.ts"],
+      css: ["src/pages/content/yt-watch/yt-watch.css"],
+      all_frames: true,
+      run_at: "document_start",
+    },
   ],
   web_accessible_resources: [
     {
-      resources: ["contentStyle.css", "icon-128.png", "icon-32.png"],
+      resources: [
+        "contentStyle.css",
+        "icon-128.png",
+        "icon-32.png",
+        "src/pages/content/yt-watch/yt-watch.css",
+      ],
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     },
   ],
@@ -50,6 +65,6 @@ const manifest = ({
   // "chrome_url_overrides": {
   //   "newtab": "src/pages/newtab/index.html"
   // },
-}) as const satisfies ManifestV3Export;
+} as const satisfies ManifestV3Export;
 
 export default manifest;
