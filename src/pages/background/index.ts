@@ -1,6 +1,9 @@
 import { openHolodexUrl } from "@src/utils/holodex";
+import { setupProxy } from "src/utils/ipc";
 
 console.log("background script loaded");
+
+setupProxy();
 
 chrome.runtime.onInstalled.addListener(() => {
   // Define the rule to remove the "X-Frame-Options" header

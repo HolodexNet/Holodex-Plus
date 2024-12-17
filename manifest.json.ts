@@ -16,11 +16,15 @@ const manifest = {
   action: {
     // default_popup: "src/pages/popup/index.html",
     default_icon: {
-      "32": "icon-32.png",
+      "16": "src/icons/16.png",
+      "32": "src/icons/32.png",
+      "48": "src/icons/48.png",
+      "64": "src/icons/64.png",
+      "128": "src/icons/128.png"
     },
   },
   icons: {
-    "128": "icon-128.png",
+    "128": "src/icons/128.png",
   },
   permissions: [
     "tabs",
@@ -31,10 +35,17 @@ const manifest = {
   ],
   host_permissions: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
   content_scripts: [
+    // {
+    //   matches: ["http://*/*", "https://*/*", "<all_urls>"],
+    //   js: ["src/pages/content/index.tsx"],
+    //   css: ["contentStyle.css"],
+    // },
     {
-      matches: ["http://*/*", "https://*/*", "<all_urls>"],
-      js: ["src/pages/content/index.tsx"],
-      css: ["contentStyle.css"],
+      matches: ["*://*.youtube.com/*"],
+      js: ["src/pages/content/yt-watch/yt-watch.ts"],
+      css: ["contentStyle.css",],
+      all_frames: true,
+      run_at: "document_start",
     },
     {
       matches: ["*://*.youtube.com/live_chat*"],
@@ -43,21 +54,15 @@ const manifest = {
       run_at: "document_end",
     },
     {
-      matches: ["*://*.youtube.com/*"],
-      js: ["src/pages/content/yt-watch/yt-watch.ts"],
-      css: ["src/pages/content/yt-watch/yt-watch.css"],
+      matches: ["*://*.youtube.com/embed/*"],
+      js: ["src/pages/content/yt-player/yt-player.ts"],
       all_frames: true,
-      run_at: "document_start",
+      run_at: "document_end",
     },
   ],
   web_accessible_resources: [
     {
-      resources: [
-        "contentStyle.css",
-        "icon-128.png",
-        "icon-32.png",
-        "src/pages/content/yt-watch/yt-watch.css",
-      ],
+      resources: ["contentStyle.css"],
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     },
   ],
