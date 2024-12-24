@@ -1,4 +1,4 @@
-import { CANONICAL_URL_REGEX, getHolodexUrl, Options } from "@src/utils";
+import { openHolodexUrl } from "@src/utils";
 
 console.log("background script loaded");
 
@@ -49,12 +49,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id || !tab.url) return;
-  await openHolodexUrl(tab.url);
-});
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "openInHolodex",
@@ -72,44 +66,23 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "openInHolodex" && tab && tab.url) {
     const linkUrl = info.linkUrl || tab.url;
-    openHolodexUrl(linkUrl);
+    await openHolodexUrl(linkUrl, tab);
   }
 });
 
-async function openHolodexUrl(url: string) {
-  const holodexUrl = await getHolodexUrl(url, async (url) => {
-    console.debug("(fallback) fetch original page for canonical URL");
-    const doc = await (await fetch(url)).text();
-    const match = doc.match(CANONICAL_URL_REGEX);
-    const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
-    console.debug("(fallback) found canonical URL:", canonicalUrl);
-    return canonicalUrl;
-  });
-  if (!holodexUrl) return;
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id || !tab.url) return;
+  await openHolodexUrl(tab.url, tab);
+});
 
-  const [currentTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (!currentTab) return;
-  const currentTabId = currentTab.id;
-  const openInNewTab = await Options.get("openHolodexInNewTab");
-  if (openInNewTab) {
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: currentTab.index + 1,
-    });
-  } else if(currentTabId) {
-    chrome.tabs.update(currentTabId, { url: holodexUrl });
-  } else {
-    // fallback behavior
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: 9999,
-    });
-  }
-}
-
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.greeting === "ytButton clicked")
+    if (request.pageUrl && sender.tab) {
+      openHolodexUrl(request.pageUrl, sender.tab);
+      sendResponse();
+    }
+  return true;
+});

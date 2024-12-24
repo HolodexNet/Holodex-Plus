@@ -33,37 +33,28 @@ async function openUrl(url: string) {
 // Holodex button injected into YT pages
 (async () => {
   if (!(await Options.get("holodexButtonInYoutube"))) return;
+  console.log("[Holodex+] yt-watch script loaded");
 
-  const holodexIcon = `
-  <svg class="yt-watch-holodex-icon" viewBox="10.646699905395508 4.526976108551025 18.35555076599121 17.86052703857422" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M13.7109 19.1446L13.7109 13.4572L13.7109 7.76991L14.6989 8.36834V13.4572L14.6989 18.5462L13.7109 19.1446ZM14.3575 22.0797C14.8429 22.4335 15.5224 22.5127 16.1107 22.1563L28.2404 14.8093C29.2562 14.1941 29.2562 12.7204 28.2404 12.1051L16.1107 4.75813C15.5224 4.40181 14.8429 4.48096 14.3574 4.8348L25.1328 11.3615C25.2107 11.4087 25.2848 11.4591 25.355 11.5125L27.7285 12.9502C28.1095 13.1809 28.1095 13.7336 27.7285 13.9643L25.3552 15.4018C25.2849 15.4553 25.2108 15.5058 25.1328 15.553L14.3575 22.0797Z"></path>
-    <path d="M10.6467 13.4572L10.6467 6.11021C10.6467 5.26342 11.5722 4.74193 12.2965 5.18064L24.4262 12.5276C25.1245 12.9506 25.1245 13.9638 24.4262 14.3868L12.2965 21.7338C11.5722 22.1725 10.6467 21.651 10.6467 20.8042L10.6467 13.4572Z" stroke-width="0.987994"></path>
-  </svg>
-  `;
-
-  let pageType: string;
-  let shortsPage = false;
-  let rendered = false;
+  const pageType = {shorts: false, watch: false}
+  let pageUrl: string;
+  let rendering = false;
 
   // This fires on both new page (re)load and internal navigation to another page
-  // (yt-page-data-fetched and other events also fire but before navigation finishes),
   // allowing it to clear the rendered flag.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   document.addEventListener("yt-navigate-finish", (evt: any) => {
     console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
-    pageType = evt.detail.pageType;
-    shortsPage = pageType === "shorts";
-    rendered = false;
+    pageUrl = "https://www.youtube.com" + evt.detail.response.url;
+    pageType.shorts = evt.detail.pageType === "shorts";
+    pageType.watch = evt.detail.pageType === "watch";
+    rendering = false;
   });
 
-  async function openHolodex() {
-    const currentUrl = new URL(window.location.href);
-    const videoId = shortsPage
-      ? currentUrl.pathname.split("/")[2]
-      : currentUrl.searchParams.get("v");
-    // TODO: Holodex watch page doesn't actually support the t param yet...
-    const t = currentUrl.searchParams.get("t");
-    await openUrl(`https://holodex.net/watch/${videoId}${t ? `?t=${t}` : ""}`);
+  function clickButton() {
+    const response = chrome.runtime.sendMessage({
+      pageUrl,
+      greeting: "ytButton clicked",
+    });
+    console.debug("[Holodex+] yt button clicked:", response);
   }
 
   function render(target: Element) {
@@ -72,13 +63,17 @@ async function openUrl(url: string) {
       container.remove();
     }
 
-    const ytElement = shortsPage
+    const holodexIcon = `
+    <svg class="yt-watch-holodex-icon" viewBox="10.646699905395508 4.526976108551025 18.35555076599121 17.86052703857422" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M13.7109 19.1446L13.7109 13.4572L13.7109 7.76991L14.6989 8.36834V13.4572L14.6989 18.5462L13.7109 19.1446ZM14.3575 22.0797C14.8429 22.4335 15.5224 22.5127 16.1107 22.1563L28.2404 14.8093C29.2562 14.1941 29.2562 12.7204 28.2404 12.1051L16.1107 4.75813C15.5224 4.40181 14.8429 4.48096 14.3574 4.8348L25.1328 11.3615C25.2107 11.4087 25.2848 11.4591 25.355 11.5125L27.7285 12.9502C28.1095 13.1809 28.1095 13.7336 27.7285 13.9643L25.3552 15.4018C25.2849 15.4553 25.2108 15.5058 25.1328 15.553L14.3575 22.0797Z"></path>
+      <path d="M10.6467 13.4572L10.6467 6.11021C10.6467 5.26342 11.5722 4.74193 12.2965 5.18064L24.4262 12.5276C25.1245 12.9506 25.1245 13.9638 24.4262 14.3868L12.2965 21.7338C11.5722 22.1725 10.6467 21.651 10.6467 20.8042L10.6467 13.4572Z" stroke-width="0.987994"></path>
+    </svg>
+    `;
+
+    const ytElement = pageType.shorts
       ? document.getElementById("share-button")
       : target.querySelector("yt-button-view-model");
-    if (!ytElement)
-      throw nodeNotFoundError(
-        shortsPage ? "share-button" : "yt-button-view-model"
-      );
+    if (!ytElement) return;
 
     const replaceValues = {
       "<!--css-build:shady-->": "",
@@ -89,7 +84,7 @@ async function openUrl(url: string) {
     };
 
     const container = document.createElement(
-      shortsPage ? "div" : "yt-watch-holodex-btn-container"
+      pageType.shorts ? "div" : "yt-watch-holodex-btn-container",
     );
     container.setAttribute("id", "holodex-button");
     container.className = ytElement.className;
@@ -97,13 +92,13 @@ async function openUrl(url: string) {
     for (const [searchValue, replaceValue] of Object.entries(replaceValues)) {
       container.innerHTML = container.innerHTML.replaceAll(
         searchValue,
-        replaceValue
+        replaceValue,
       );
     }
-    container.addEventListener("click", openHolodex);
+    container.addEventListener("click", clickButton);
 
     const ytButton = container.querySelector("button");
-    if (!ytButton) throw nodeNotFoundError("button");
+    if (!ytButton) return;
 
     const button = document.createElement("button");
     button.className = ytButton.className;
@@ -114,14 +109,14 @@ async function openUrl(url: string) {
     const label = document.createElement("span");
     label.textContent = "Holodex";
 
-    if (shortsPage) {
+    if (pageType.shorts) {
       const ytLabel = container.querySelector("span");
-      if (!ytLabel) throw nodeNotFoundError("span");
+      if (!ytLabel) return;
 
       label.className = ytLabel.className;
 
       const ytTooltip = container.querySelector("tp-yt-paper-tooltip");
-      if (!ytTooltip) throw nodeNotFoundError("tp-yt-paper-tooltip");
+      if (!ytTooltip) return;
       const tooltip = ytTooltip.cloneNode() as HTMLElement;
       if (!tooltip) return;
 
@@ -139,50 +134,36 @@ async function openUrl(url: string) {
     }
 
     ytButton.replaceWith(button);
-    shortsPage
-      ? target.insertBefore(container, target.firstChild)
-      : target.appendChild(container);
-    rendered = true;
+    pageType.shorts ? target.insertBefore(container, target.firstChild) : target.appendChild(container);
+    console.log("[Holodex+] yt button rendered")
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const ytdApp = document.querySelector("ytd-app");
-    if (!ytdApp) throw nodeNotFoundError("ytd-app");
+    if (!ytdApp) return;
 
     // Setup mutation observer to (re)render on Watch and Shorts pages,
     // both for new page (re)load and internal navigation to another page.
     new MutationObserver(() => {
-      if (rendered) return;
-      if (pageType === "shorts") {
-        const ytdReelVideoRenderer = ytdApp.querySelector(
-          "ytd-reel-video-renderer[is-active]"
-        );
-        if (!ytdReelVideoRenderer) return;
+      if (rendering || !(pageType.shorts || pageType.watch)) return;
+      const ytdReelVideoRenderer = ytdApp.querySelector("ytd-reel-video-renderer[is-active]");
 
-        const actions = ytdReelVideoRenderer.querySelector("#actions");
-        if (!actions) throw nodeNotFoundError("#actions");
-        console.debug("[Holodex+] found #actions:", actions);
+      const actions = (pageType.shorts && ytdReelVideoRenderer ? ytdReelVideoRenderer : ytdApp).querySelector("#actions");
+      if (!actions) return;
+      console.debug("[Holodex+] found #actions:", actions);
 
-        render(actions);
-      } else if (pageType === "watch") {
-        const actions = ytdApp.querySelector("#actions");
-        if (!actions) throw nodeNotFoundError("#actions");
-        console.debug("[Holodex+] found #actions:", actions);
+      // If #actions already contains #top-level-buttons-computed, render immediately.
+      // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
+      const target = actions.querySelector("#top-level-buttons-computed");
 
-        // If #actions already contains #top-level-buttons-computed, render immediately.
-        // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
-        const target = actions.querySelector("#top-level-buttons-computed");
-        if (!target) throw nodeNotFoundError("#top-level-buttons-computed");
-
-        render(target);
-      }
+      setTimeout(() => {
+        rendering = true;
+        render(!pageType.shorts && target ? target : actions);
+      }, 200)
     }).observe(ytdApp, { childList: true, subtree: true });
   });
-
-  function nodeNotFoundError(node: string) {
-    return new Error("[Holodex+] could not find " + node);
-  }
 })();
+
 
 // openHolodexUrl handler
 

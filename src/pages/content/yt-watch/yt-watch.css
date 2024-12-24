@@ -13,15 +13,16 @@
 .yt-watch-holodex-icon path:nth-child(1) {
   fill: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));
 }
+
 .yt-watch-holodex-icon path:nth-child(2) {
   stroke: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));
 }
 
-.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(1) {
+.yt-watch-holodex-btn:hover .yt-watch-holodex-icon>path:nth-child(1) {
   fill: #f06292;
 }
 
-.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(2) {
+.yt-watch-holodex-btn:hover .yt-watch-holodex-icon>path:nth-child(2) {
   stroke: #5da2f2;
 }
 

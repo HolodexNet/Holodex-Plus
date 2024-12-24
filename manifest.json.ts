@@ -16,11 +16,15 @@ const manifest = {
   action: {
     // default_popup: "src/pages/popup/index.html",
     default_icon: {
-      "32": "icon-32.png",
+      "16": "src/icons/16.png",
+      "32": "src/icons/32.png",
+      "48": "src/icons/48.png",
+      "64": "src/icons/64.png",
+      "128": "src/icons/128.png"
     },
   },
   icons: {
-    "128": "icon-128.png",
+    "128": "src/icons/128.png",
   },
   permissions: [
     "tabs",
@@ -57,7 +61,7 @@ const manifest = {
   ],
   web_accessible_resources: [
     {
-      resources: ["contentStyle.css", "icon-128.png", "icon-32.png"],
+      resources: ["contentStyle.css"],
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     },
   ],
@@ -67,4 +71,4 @@ const manifest = {
   // },
 } as const satisfies ManifestV3Export;
 
-export default manifest; 
+export default manifest;
