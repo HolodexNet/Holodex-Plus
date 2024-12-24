@@ -1,6 +1,6 @@
-import { Innertube, UniversalCache } from "youtubei.js/web.bundle.min";
+import { Innertube, UniversalCache } from "youtubei.js";
 import { ProtoframeDescriptor, ProtoframePubsub } from "protoframe";
-import type { Format } from "youtubei.js/dist/src/parser/misc";
+// import type { Format } from "youtubei.js/dist/src/Innertube.d.ts";
 
 console.log("[Holodex+]", "Setting YT player overrides");
 
@@ -38,7 +38,7 @@ const overrides: Record<string, string> = {
   html5_streaming_xhr: "false",
 };
 
-// @ts-ignore
+// @ts-expect-error "ytcfg" is a YT global
 const cfg = window.ytcfg;
 
 if (!cfg) {
@@ -79,7 +79,7 @@ export const ytAudioDLProtocol: ProtoframeDescriptor<{
 
 const manager = ProtoframePubsub.iframe(ytAudioDLProtocol);
 
-manager.handleAsk("fetchAudio", async (body): Promise<{ state: "ok" | "failed"; msg: string; format?: YTFFormat }> => {
+manager.handleAsk("fetchAudio", async (body) => {
   if (!body.videoId) {
     console.error("[Holodex+] No video ID");
     return Promise.resolve({ state: "failed", msg: "No Video ID provided", format: undefined });
@@ -102,7 +102,7 @@ manager.handleAsk("fetchAudio", async (body): Promise<{ state: "ok" | "failed"; 
     });
     const totalBytes = format.content_length || -1;
 
-    return await new Promise((resolve, reject) => {
+    return await new Promise((resolve,) => {
       info
         .download({
           client: "WEB",
@@ -117,6 +117,7 @@ manager.handleAsk("fetchAudio", async (body): Promise<{ state: "ok" | "failed"; 
             let downloadedBytes = 0;
 
             const reader = rstream.getReader();
+            // eslint-disable-next-line no-constant-condition
             while (true) {
               const x = await reader.read();
 

@@ -8,7 +8,8 @@ import { runtime } from "webextension-polyfill";
 export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
-  el.type = "text/javascript";
+  // el.type = "text/javascript";
+  el.type = "module";
   const head = await waitForDOMPredicate(() => document.head);
   head.appendChild(el);
   return el;
@@ -198,3 +199,39 @@ function searchObjectHelper<T>(
   }
   return result;
 }
+
+
+export async function openHolodexUrl(url: string, tab?: chrome.tabs.Tab) {
+  const holodexUrl = await getHolodexUrl(url, async (url) => {
+    console.debug("(fallback) fetch original page for canonical URL");
+    const doc = await (await fetch(url)).text();
+    const match = doc.match(CANONICAL_URL_REGEX);
+    const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
+    console.debug("(fallback) found canonical URL:", canonicalUrl);
+    return canonicalUrl;
+  });
+  if (!holodexUrl) return;
+
+  const [currentTab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (!currentTab) return;
+  const currentTabId = currentTab.id;
+  const openInNewTab = await Options.get("openHolodexInNewTab");
+  if (openInNewTab) {
+    chrome.tabs.create({
+      url: holodexUrl,
+      index: currentTab.index + 1,
+    });
+  } else if (currentTabId) {
+    chrome.tabs.update(currentTabId, { url: holodexUrl });
+  } else {
+    // fallback behavior
+    chrome.tabs.create({
+      url: holodexUrl,
+      index: 9999,
+    });
+  }
+}
+

@@ -27,6 +27,9 @@ export const baseManifest = {
     defineDynamicResource({
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     }),
+    defineDynamicResource({
+      matches: ["*://*.youtube.com/*"],
+    }),
   ],
 } as ManifestV3Export;
 
