@@ -1,4 +1,135 @@
-import { runtime } from "webextension-polyfill";
+import { storage, runtime } from "webextension-polyfill";
+
+// To add something to options, just add it to `schema`
+const schema = {
+  // key: default-value
+  remoteYoutubeLikeButton: true,
+  holodexButtonInYoutube: false,
+  openHolodexInNewTab: true,
+  openInHolodexContextMenu: false,
+};
+type Schema = typeof schema;
+const descriptions: Partial<Record<keyof Schema, string>> = {
+  remoteYoutubeLikeButton:
+    "Add a 'Like on YouTube' button to Holodex videos - clicking it will open YouTube in a new tab",
+  holodexButtonInYoutube:
+    "Add a 'View in Holodex' button below YouTube videos for quick access to Holodex features",
+  openHolodexInNewTab:
+    "When clicking the extension icon, open Holodex in a new tab instead of the current one",
+  openInHolodexContextMenu:
+    "Add 'Open in Holodex' to the right-click menu for video links",
+};
+
+export const Options = {
+  /** Get the options storage schema */
+  schema(): Schema {
+    return { ...schema };
+  },
+
+  /** Get an option's description */
+  description<K extends keyof Schema>(key: K): string | null {
+    return descriptions[key] ?? null;
+  },
+
+  /** Get an option */
+  async get<K extends keyof Schema>(key: K): Promise<Schema[K] | null> {
+    const result = await storage.local.get(key);
+    return key in result ? result[key] : schema[key];
+  },
+
+  /** Set an option */
+  async set<K extends keyof Schema>(key: K, value: Schema[K]): Promise<void> {
+    await storage.local.set({ [key]: value });
+  },
+
+  // This probably shouldn't be used as it is, because it doesn't listen for changes
+  // in *just* the options storage.
+  /**
+   * Listen for changes in the options storage
+   */
+  /* subscribe(callback: (changes: { [K in keyof Schema]?: browser.Storage.StorageChange }) => void) {
+    storage.onChanged.addListener((changes, type) => {
+      if (type !== "local") return;
+      callback(changes);
+    });
+  }, */
+} as const;
+
+
+const HOLODEX_URL_HOME = "https://holodex.net";
+const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
+const YOUTUBE_HOSTNAME_REGEX = /^(?:[^\/]+\.)?youtube.com/i;
+const FEED_PATHNAME_REGEX = /^(?:\/?$|\/feed\b)/i; // pathname matches homepage or any feed like subscriptions
+const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
+const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
+const CANONICAL_URL_REGEX =
+  /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
+
+export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab) {
+  const holodexUrl = await getHolodexUrl(url);
+  if (!holodexUrl) return;
+
+  const currentTabId = tab.id;
+  if (await Options.get("openHolodexInNewTab"))
+    await chrome.tabs.create({ url: holodexUrl, index: tab.index + 1 });
+  else if (currentTabId)
+    await chrome.tabs.update(currentTabId, { url: holodexUrl });
+  else
+    // fallback behavior
+    await chrome.tabs.create({ url: holodexUrl, index: 9999 });
+}
+
+/**
+ * Returns a promise resolving to the Holodex URL for given URL.
+ * Supports returning Holodex channel and watch Holodex URLs,
+ * and defaults to Holodex homepage for non-YT URLs and YT homepage & feeds.
+ * For other YT URLs, including the new @<channel> URLs, delegates to given handler,
+ * which is passed the given URL and returns a promise resolving to a YT canonical URL,
+ * from which to derive the Holodex URL from.
+ */
+export async function getHolodexUrl(url: string | undefined) {
+  function matchURL(testUrl: string): string | undefined {
+    const videoMatch = testUrl.match(VIDEO_URL_REGEX);
+    if (videoMatch) {
+      return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
+    }
+    const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
+    if (channelMatch) {
+      return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
+    }
+  }
+
+  if (url) {
+    if (HOLODEX_URL_REGEX.test(url)) {
+      return null;
+    }
+
+    const result = matchURL(url);
+    if (result) return result;
+
+    const urlObj = new URL(url);
+    if (
+      YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) &&
+      !FEED_PATHNAME_REGEX.test(urlObj.pathname)
+    ) {
+      const canonicalUrl = await findCanonicalUrl(url);
+      if (canonicalUrl) {
+        const result = matchURL(canonicalUrl);
+        if (result) return result;
+      }
+    }
+  }
+  return HOLODEX_URL_HOME;
+}
+
+async function findCanonicalUrl(url: string): Promise<string | null> {
+  console.debug("(fallback) fetch original page for canonical URL");
+  const doc = await (await fetch(url)).text();
+  const match = doc.match(CANONICAL_URL_REGEX);
+  const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
+  console.debug("(fallback) found canonical URL:", canonicalUrl);
+  return canonicalUrl;
+}
 
 /**
  * Inject a script onto the page. Script must be
@@ -8,8 +139,7 @@ import { runtime } from "webextension-polyfill";
 export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
-  // el.type = "text/javascript";
-  el.type = "module";
+  el.type = "text/javascript";
   const head = await waitForDOMPredicate(() => document.head);
   head.appendChild(el);
   return el;
@@ -199,39 +329,3 @@ function searchObjectHelper<T>(
   }
   return result;
 }
-
-
-export async function openHolodexUrl(url: string, tab?: chrome.tabs.Tab) {
-  const holodexUrl = await getHolodexUrl(url, async (url) => {
-    console.debug("(fallback) fetch original page for canonical URL");
-    const doc = await (await fetch(url)).text();
-    const match = doc.match(CANONICAL_URL_REGEX);
-    const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
-    console.debug("(fallback) found canonical URL:", canonicalUrl);
-    return canonicalUrl;
-  });
-  if (!holodexUrl) return;
-
-  const [currentTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (!currentTab) return;
-  const currentTabId = currentTab.id;
-  const openInNewTab = await Options.get("openHolodexInNewTab");
-  if (openInNewTab) {
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: currentTab.index + 1,
-    });
-  } else if (currentTabId) {
-    chrome.tabs.update(currentTabId, { url: holodexUrl });
-  } else {
-    // fallback behavior
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: 9999,
-    });
-  }
-}
-

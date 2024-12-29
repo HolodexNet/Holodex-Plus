@@ -49,8 +49,9 @@ const manifest = {
     {
       matches: ["*://*.youtube.com/*"],
       js: ["src/pages/content/yt-watch/contentScript.ts"],
+      css: ["src/pages/content/yt-watch/contentStyle.css"],
       all_frames: true,
-      run_at: "document_end",
+      run_at: "document_start",
     },
     {
       matches: ["*://*.youtube.com/embed/*"],
@@ -61,7 +62,7 @@ const manifest = {
   ],
   web_accessible_resources: [
     {
-      resources: ["contentStyle.css"],
+      resources: ["src/pages/content/yt-watch/contentStyle.css"],
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     },
   ],

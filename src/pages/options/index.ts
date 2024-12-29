@@ -1,5 +1,4 @@
-import { entries } from "@src/utils";
-import { Options } from "@src/utils/options";
+import { entries, Options } from "@src/utils";
 import "@assets/styles/tailwind.css";
 
 // const HelpIcon = () => `

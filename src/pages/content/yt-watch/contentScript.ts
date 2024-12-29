@@ -1,41 +1,11 @@
-import {
-  Options,
-  inject,
-  getHolodexUrl,
-  searchObject,
-  CANONICAL_URL_REGEX,
-} from "@src/utils";
-import { runtime } from "webextension-polyfill";
-import injectedFilename from "./inject?script&module"
-import "./yt-watch.css"
-
-// @ts-expect-error "Signal" is a JS lib
-import Signal from "signal-promise";
-
-// If openHolodexInNewTab=true, opens given URL in a new focused tab and returns true,
-// or null if somehow unsuccessful.
-// If openHolodexInNewTab=false, opens given URL in the same tab, preserving the tab's session history,
-// and returns false.
-async function openUrl(url: string) {
-  if (await Options.get("openHolodexInNewTab")) {
-    const newWindow = window.open(url);
-    if (newWindow) {
-      newWindow.focus();
-      return true;
-    }
-    return null;
-  } else {
-    window.location.assign(url);
-    return false;
-  }
-}
+import { Options } from "@src/utils";
 
 // Holodex button injected into YT pages
 (async () => {
   if (!(await Options.get("holodexButtonInYoutube"))) return;
   console.log("[Holodex+] yt-watch script loaded");
 
-  const pageType = {shorts: false, watch: false}
+  let pageType = {shorts: false, watch: false}
   let pageUrl: string;
   let rendering = false;
 
@@ -70,7 +40,7 @@ async function openUrl(url: string) {
     </svg>
     `;
 
-    const ytElement = pageType.shorts
+    let ytElement = pageType.shorts
       ? document.getElementById("share-button")
       : target.querySelector("yt-button-view-model");
     if (!ytElement) return;
@@ -163,111 +133,3 @@ async function openUrl(url: string) {
     }).observe(ytdApp, { childList: true, subtree: true });
   });
 })();
-
-
-// openHolodexUrl handler
-
-// Note regarding the Promise.resolve below:
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
-// "If you only want the listener to respond to messages of a certain type, you must define the listener as a non-async function,
-// and return a Promise only for the messages the listener is meant to respond to — and otherwise return false or undefined"
-runtime.onMessage.addListener((message) => {
-  if (message?.command !== "openHolodexUrl") return;
-  console.debug("[Holodex+] handling openHolodexUrl message");
-  return Promise.resolve(openHolodexUrl(message?.link));
-});
-
-async function openHolodexUrl(link = window.location.href) {
-  const url = await getHolodexUrl(link, findCanonicalUrl);
-  if (!url) return null;
-  const newTabOpened = await openUrl(url);
-  console.debug(
-    "[Holodex+]",
-    newTabOpened ? "new tab created:" : "updated tab:",
-    url
-  );
-  return { url, newTabOpened };
-}
-
-// Finds the "canonical URL" for a YT page, from which we can derive the Holodex URL.
-async function findCanonicalUrl() {
-  if (!pageData) {
-    console.debug("[Holodex+] waiting for page data to become available...");
-    await pageDataSignal.wait(3000);
-    if (!pageData) {
-      console.log(
-        "[Holodex+] page data still unavailable - will default to fetch fallback to find canonical URL"
-      );
-      return null;
-    }
-  }
-  console.debug("[Holodex+] page data from", pageDataLabel, pageData);
-  const canonicalUrl = getCanonicalUrlFromData(pageData);
-  console.debug("[Holodex+] found canonical URL:", canonicalUrl);
-  return canonicalUrl;
-}
-
-// The canonical URL is available in link[rel="canonical"] and some other element attrs/content,
-// but it does not update when internally navigating to another page,
-// i.e. a user clicks a YT link from within a YT page.
-// We can derive the canonical URL from ytd-app.data, or yt* global vars initially,
-// but those are managed by YT's own scripts and thus inaccessible from the content script context.
-// While we can access both in the page context via an injected page script,
-// it's a PITA to round-trip messages between content script and injected page script.
-// Instead, there are events we can hook into to broadcast data updates to this content script.
-// See yt-watch.inject.ts
-let pageData: unknown = null;
-let pageDataLabel: string; // for debug logging
-const pageDataSignal = new Signal(); // actually a condition variable in concurrency parlance
-window.addEventListener("message", (evt: MessageEvent) => {
-  if (
-    evt.origin !== window.location.origin ||
-    evt.source !== window ||
-    !evt.data?.pageData
-  )
-    return;
-  //console.debug("[Holodex+] received pageData message:", evt.data);
-  ({ pageData, pageDataLabel } = evt.data);
-  if (pageData) pageDataSignal.notify();
-});
-
-
-inject(injectedFilename);
-
-
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getCanonicalUrlFromData(pageData: any) {
-  // Note: Not using pageData.url since it can e.g. be live/<videoId> which is not canonical.
-  // Following should be compatible with the fallback fetch in the background script,
-  // that is, the first canonical URL found on the page.
-  let canonicalUrl: string | null = null;
-  switch (pageData.page) {
-    case "watch":
-    case "shorts": {
-      const videoId = pageData.playerResponse?.videoDetails?.videoId;
-      if (videoId) {
-        // Technically, shorts canonical URL should /shorts/<videoId> but watch page works.
-        canonicalUrl = "https://www.youtube.com/watch?v=" + videoId;
-      }
-      break;
-    }
-    case "channel":
-      // data.response.microformat.microformatDataRenderer.urlCanonical also works.
-      canonicalUrl =
-        pageData.response?.metadata?.channelMetadataRenderer?.channelUrl;
-      break;
-    case "playlist": // not directly supported due to lack of corresponding Holodex page, so fall-through.
-    default:
-      // Find the first canonical URL found in data, which should also be the first canonical URL
-      // found in the whole page, which is what the fetch fallback in the background script does.
-      canonicalUrl = searchObject(pageData, (item) => {
-        if (typeof item.val === "string") {
-          const match = item.val.match(CANONICAL_URL_REGEX);
-          if (match) return "https://www.youtube.com" + match[0];
-        }
-        return null;
-      });
-  }
-  return canonicalUrl;
-}
