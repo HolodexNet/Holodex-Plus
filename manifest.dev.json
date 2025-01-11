@@ -1,18 +1,11 @@
 {
-  "action": {
-    "default_icon": "public/dev-icon-32.png"
-  },
-  "icons": {
-    "128": "public/dev-icon-128.png"
-  },
-  "web_accessible_resources": [
+  "content_scripts": [
     {
-      "resources": [
-        "contentStyle.css",
-        "dev-icon-128.png",
-        "dev-icon-32.png"
-      ],
-      "matches": []
+      "matches": ["http://localhost:8080/*", "http://127.0.0.1:8080/*"],
+      "js": ["src/pages/content/holodex/contentScript.ts"],
+      "all_frames": true,
+      "run_at": "document_start"
     }
-  ]
+  ],
+  "host_permissions": ["http://localhost:8080/*", "http://127.0.0.1:8080/*"]
 }

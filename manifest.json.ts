@@ -20,7 +20,7 @@ const manifest = {
       "32": "src/icons/32.png",
       "48": "src/icons/48.png",
       "64": "src/icons/64.png",
-      "128": "src/icons/128.png"
+      "128": "src/icons/128.png",
     },
   },
   icons: {
@@ -33,13 +33,28 @@ const manifest = {
     "webRequest", // unknown if still need.
     "declarativeNetRequestWithHostAccess",
   ],
-  host_permissions: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
+  host_permissions: [
+    "*://*.youtube.com/*",
+    "*://*.holodex.net/*",
+    "http://localhost:8080/*",
+    "http://127.0.0.1:8080/*",
+  ],
   content_scripts: [
     // {
     //   matches: ["http://*/*", "https://*/*", "<all_urls>"],
     //   js: ["src/pages/content/index.tsx"],
     //   css: ["contentStyle.css"],
     // },
+    {
+      matches: [
+        "*://*.holodex.net/*",
+        "http://localhost:8080/*",
+        "http://127.0.0.1:8080/*",
+      ],
+      js: ["src/pages/content/holodex/contentScript.ts"],
+      all_frames: true,
+      run_at: "document_start",
+    },
     {
       matches: ["*://*.youtube.com/live_chat*"],
       js: ["src/pages/content/yt-chat/contentScript.ts"],
