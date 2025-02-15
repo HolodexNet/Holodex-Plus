@@ -65,8 +65,8 @@ const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
 const CANONICAL_URL_REGEX =
   /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
 
-export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab) {
-  const holodexUrl = await getHolodexUrl(url);
+export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, multiview: boolean = false) {
+  const holodexUrl = await getHolodexUrl(url, multiview);
   if (!holodexUrl) return;
 
   const currentTabId = tab.id;
@@ -87,14 +87,16 @@ export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab) {
  * which is passed the given URL and returns a promise resolving to a YT canonical URL,
  * from which to derive the Holodex URL from.
  */
-export async function getHolodexUrl(url: string | undefined) {
+export async function getHolodexUrl(url: string | undefined, multiview: boolean) {
   function matchURL(testUrl: string): string | undefined {
     const videoMatch = testUrl.match(VIDEO_URL_REGEX);
     if (videoMatch) {
+      if (multiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
       return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
     }
     const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
     if (channelMatch) {
+      if (multiview) return HOLODEX_URL_HOME.concat(`/multiview`)
       return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
     }
   }
@@ -119,6 +121,8 @@ export async function getHolodexUrl(url: string | undefined) {
       }
     }
   }
+
+  if (multiview) return HOLODEX_URL_HOME.concat(`/multiview`);
   return HOLODEX_URL_HOME;
 }
 

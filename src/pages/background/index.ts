@@ -50,26 +50,44 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
+  let targetList = [
+    "https://*.youtube.com/",
+    "https://*.youtube.com/feed/*",
+    "https://*.youtube.com/watch?*",
+    "https://*.youtube.com/shorts/*",
+    "https://*.youtube.com/channel*",
+    "https://*.youtube.com/@*",
+  ];
+
   chrome.contextMenus.create({
     id: "openInHolodex",
     title: "Open in Holodex",
     contexts: ["link"],
     documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: [
-      "https://*.youtube.com/",
-      "https://*.youtube.com/feed/*",
-      "https://*.youtube.com/channel*",
-      "https://*.youtube.com/watch?*",
-      "https://*.youtube.com/shorts/*",
-      "https://*.youtube.com/@*",
-    ],
+    targetUrlPatterns: targetList,
+  });
+
+  for (let i = 0; i < 2; targetList.pop(), i++);
+
+  chrome.contextMenus.create({
+    id: "openInMultiView",
+    title: "Open in MultiView",
+    contexts: ["link", "action"],
+    documentUrlPatterns: ["https://*.youtube.com/*"],
+    targetUrlPatterns: targetList,
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "openInHolodex" && tab && tab.url) {
-    const linkUrl = info.linkUrl || tab.url;
-    await openHolodexUrl(linkUrl, tab);
+  if (!(tab && tab.url)) return;
+  const linkUrl = info.linkUrl || tab.url;
+  let multiview = false;
+
+  switch (info.menuItemId) {
+    case "openInMultiView":
+      multiview = true;
+    case "openInHolodex":
+      await openHolodexUrl(linkUrl, tab, multiview);
   }
 });
 
