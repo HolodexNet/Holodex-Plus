@@ -65,12 +65,12 @@ const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
 const CANONICAL_URL_REGEX =
   /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
 
-export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, multiview: boolean = false) {
-  const holodexUrl = await getHolodexUrl(url, multiview);
+export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, isMultiview: boolean = false) {
+  const holodexUrl = await getHolodexUrl(url, isMultiview);
   if (!holodexUrl) return;
 
   const currentTabId = tab.id;
-  if (await Options.get("openHolodexInNewTab"))
+  if (await Options.get("openHolodexInNewTab") && tab.title !== "New Tab")
     await chrome.tabs.create({ url: holodexUrl, index: tab.index + 1 });
   else if (currentTabId)
     await chrome.tabs.update(currentTabId, { url: holodexUrl });
@@ -87,16 +87,16 @@ export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, multivie
  * which is passed the given URL and returns a promise resolving to a YT canonical URL,
  * from which to derive the Holodex URL from.
  */
-export async function getHolodexUrl(url: string | undefined, multiview: boolean) {
+export async function getHolodexUrl(url: string | undefined, isMultiview: boolean) {
   function matchURL(testUrl: string): string | undefined {
     const videoMatch = testUrl.match(VIDEO_URL_REGEX);
     if (videoMatch) {
-      if (multiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
+      if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
       return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
     }
     const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
     if (channelMatch) {
-      if (multiview) return HOLODEX_URL_HOME.concat(`/multiview`)
+      if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`)
       return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
     }
   }
@@ -122,7 +122,7 @@ export async function getHolodexUrl(url: string | undefined, multiview: boolean)
     }
   }
 
-  if (multiview) return HOLODEX_URL_HOME.concat(`/multiview`);
+  if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`);
   return HOLODEX_URL_HOME;
 }
 

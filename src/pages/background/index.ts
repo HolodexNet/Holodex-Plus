@@ -81,13 +81,13 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!(tab && tab.url)) return;
   const linkUrl = info.linkUrl || tab.url;
-  let multiview = false;
+  let isMultiview = false;
 
   switch (info.menuItemId) {
     case "openInMultiView":
-      multiview = true;
+      isMultiview = true;
     case "openInHolodex":
-      await openHolodexUrl(linkUrl, tab, multiview);
+      await openHolodexUrl(linkUrl, tab, isMultiview);
   }
 });
 
@@ -97,10 +97,9 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.greeting === "ytButton clicked")
-    if (request.pageUrl && sender.tab) {
-      openHolodexUrl(request.pageUrl, sender.tab);
-      sendResponse();
-    }
+  if (request.greeting === "ytButton clicked" && request.pageUrl && sender.tab) {
+    openHolodexUrl(request.pageUrl, sender.tab);
+    sendResponse();
+  }
   return true;
 });
