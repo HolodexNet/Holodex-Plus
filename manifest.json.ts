@@ -2,7 +2,7 @@ import type { ManifestV3Export } from "@crxjs/vite-plugin";
 
 const manifest = {
   manifest_version: 3,
-  version: "<placeholder>",
+  version: "v1.0.0",
   name: "Holodex Plus",
   description: "Holodex companion extension",
   options_ui: {
@@ -20,6 +20,7 @@ const manifest = {
     },
   },
   icons: {
+    "16": "icon-16.png",
     "128": "icon-128.png",
   },
   permissions: [
