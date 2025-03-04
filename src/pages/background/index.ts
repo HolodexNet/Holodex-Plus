@@ -1,6 +1,6 @@
 import { CANONICAL_URL_REGEX, getHolodexUrl, Options } from "@src/utils";
 
-console.log("background script loaded");
+console.log("[Holodex+] background script loaded");
 
 chrome.runtime.onInstalled.addListener(() => {
   // Define the rule to remove the "X-Frame-Options" header
@@ -18,8 +18,8 @@ chrome.runtime.onInstalled.addListener(() => {
         ],
       },
       condition: {
-        urlFilter: "*://*.youtube.com/live_chat_replay?*",
-        resourceTypes: ["main_frame", "sub_frame"], // Specify resource types
+        initiatorDomains: ["youtube.com"],
+        resourceTypes: ["sub_frame", "main_frame"],
       },
     },
     {
@@ -48,7 +48,6 @@ chrome.runtime.onInstalled.addListener(() => {
     addRules: rules,
   });
 });
-
 
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id || !tab.url) return;
@@ -102,7 +101,7 @@ async function openHolodexUrl(url: string) {
       url: holodexUrl,
       index: currentTab.index + 1,
     });
-  } else if(currentTabId) {
+  } else if (currentTabId) {
     chrome.tabs.update(currentTabId, { url: holodexUrl });
   } else {
     // fallback behavior
@@ -112,4 +111,3 @@ async function openHolodexUrl(url: string) {
     });
   }
 }
-
