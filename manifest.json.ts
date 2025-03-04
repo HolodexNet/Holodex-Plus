@@ -2,7 +2,7 @@ import type { ManifestV3Export } from "@crxjs/vite-plugin";
 
 const manifest = {
   manifest_version: 3,
-  version: "v1.0.0",
+  version: "<get from package.json>",
   name: "Holodex Plus",
   description: "Holodex companion extension",
   options_ui: {
@@ -38,7 +38,7 @@ const manifest = {
     //   css: ["contentStyle.css"],
     // },
     {
-      matches: ["*://*.holodex.net/*"],
+      matches: ["*://*.holodex.net/*", "*://*.localhost*/*"],
       js: ["src/pages/content/holodex/holodex.ts"],
       all_frames: true,
       run_at: "document_start",
