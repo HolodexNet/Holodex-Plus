@@ -6,18 +6,26 @@ const schema = {
   remoteYoutubeLikeButton: true,
   holodexButtonInYoutube: false,
   openHolodexInNewTab: true,
-  openInHolodexContextMenu: false,
+  // openInHolodexContextMenu: false,
 };
 type Schema = typeof schema;
-const descriptions: Partial<Record<keyof Schema, string>> = {
-  remoteYoutubeLikeButton:
-    "Add a 'Like on YouTube' button to Holodex videos - clicking it will open YouTube in a new tab",
-  holodexButtonInYoutube:
-    "Add a 'View in Holodex' button below YouTube videos for quick access to Holodex features",
-  openHolodexInNewTab:
-    "When clicking the extension icon, open Holodex in a new tab instead of the current one",
-  openInHolodexContextMenu:
-    "Add 'Open in Holodex' to the right-click menu for video links",
+const descriptions: Partial<Record<keyof Schema, { name: string, description: string }>> = {
+  remoteYoutubeLikeButton: {
+    name: "Like Button on Holodex",
+    description: "Add a 'Like on YouTube' button to Holodex videos - clicking it will open YouTube in a new tab",
+  },
+  holodexButtonInYoutube: {
+    name: "Holodex Button on YouTube",
+    description: "Add a 'View in Holodex' button below YouTube videos for quick access to Holodex features",
+  },
+  openHolodexInNewTab: {
+    name: "Open in New Tab",
+    description: "When clicking the extension icon, open Holodex in a new tab instead of the current one",
+  },
+  // openInHolodexContextMenu: {
+  //   name: "Holodex Context Menu",
+  //   description: "Add 'Open in Holodex' to the right-click menu for video links",
+  // },
 };
 
 export const Options = {
@@ -27,8 +35,13 @@ export const Options = {
   },
 
   /** Get an option's description */
+  name<K extends keyof Schema>(key: K): string | null{
+    return descriptions[key]?.name ?? null;
+  },
+
+  /** Get an option's description */
   description<K extends keyof Schema>(key: K): string | null {
-    return descriptions[key] ?? null;
+    return descriptions[key]?.description ?? null;
   },
 
   /** Get an option */

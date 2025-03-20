@@ -19,12 +19,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   title.textContent = "Extension Options";
   form.prepend(title);
 
-  for (const [name, defaultValue] of entries(Options.schema())) {
-    if (typeof defaultValue !== "boolean") continue;
-
+  for (const [option, defaultValue] of entries(Options.schema())) {
     const container = document.createElement("div");
     container.className =
-      "flex items-center justify-between p-4 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors";
+      "items-center justify-between p-4 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors";
+
+    // Heading section
+    const heading = document.createElement("h2");
+    heading.className = "text-lg font-bold text-red-500";
+    heading.textContent = Options.name(option);
 
     // Label section
     const labelSection = document.createElement("div");
@@ -32,9 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const text = document.createElement("span");
     text.className = "text-gray-200";
-    text.textContent = Options.description(name) || name;
-
-    labelSection.appendChild(text);
+    text.textContent = Options.description(option);
 
     // Add tooltip if description exists
     // const desc = Options.description(name);
@@ -56,8 +57,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     //   labelSection.appendChild(tooltip);
     // }
 
-    container.appendChild(labelSection);
-
     // Toggle switch
     const switchContainer = document.createElement("label");
     switchContainer.className =
@@ -66,8 +65,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const input = document.createElement("input");
     input.type = "checkbox";
     input.className = "sr-only peer";
-    input.checked = (await Options.get(name)) ?? defaultValue;
-    input.addEventListener("change", () => Options.set(name, input.checked));
+    input.checked = (await Options.get(option)) ?? defaultValue;
+    input.addEventListener("change", () => Options.set(option, input.checked));
 
     const slider = document.createElement("div");
     slider.className = `
@@ -93,7 +92,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     switchContainer.appendChild(input);
     switchContainer.appendChild(slider);
-    container.appendChild(switchContainer);
+
+    labelSection.appendChild(text);
+    labelSection.appendChild(switchContainer);
+
+    container.appendChild(heading);
+    container.appendChild(labelSection);
 
     form.appendChild(container);
   }
