@@ -15,8 +15,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Add title
   const title = document.createElement("h1");
-  title.className = "text-2xl font-bold text-red-500 mb-6";
-  title.textContent = "Extension Options";
+  title.className = "text-2xl font-bold text-pink-500 mb-6";
+  title.textContent = "Holodex+ Options";
+
+  const subtitle = document.createElement("h3");
+  subtitle.className = "text-lg font-bold text-red-500 mb-6";
+  subtitle.textContent = "[v3] Options below are work in progress!";
+
+  form.prepend(subtitle);
   form.prepend(title);
 
   for (const [name, defaultValue] of entries(Options.schema())) {

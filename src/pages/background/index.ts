@@ -1,6 +1,6 @@
 import { openHolodexUrl } from "@src/utils";
 
-console.log("background script loaded");
+console.log("[Holodex+] background script loaded");
 
 chrome.runtime.onInstalled.addListener(() => {
   // Define the rule to remove the "X-Frame-Options" header
@@ -18,8 +18,8 @@ chrome.runtime.onInstalled.addListener(() => {
         ],
       },
       condition: {
-        urlFilter: "*://*.youtube.com/live_chat_replay?*",
-        resourceTypes: ["main_frame", "sub_frame"], // Specify resource types
+        initiatorDomains: ["youtube.com"],
+        resourceTypes: ["sub_frame", "main_frame"],
       },
     },
     {
