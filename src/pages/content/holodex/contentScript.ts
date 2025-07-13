@@ -1,4 +1,4 @@
-import { inject, } from "@src/utils";
-import injectPath from "./inject_holodex?script&module";
+import { inject } from "@src/utils";
+import injectPath from "./holodex-inject?script&module";
 
 inject(injectPath);

@@ -48,7 +48,7 @@ const manifest = {
     // },
     {
       matches: ["*://*.holodex.net/*", "*://*.localhost*/*"],
-      js: ["src/pages/content/holodex/holodex.ts"],
+      js: ["src/pages/content/holodex/contentScript.ts"],
       all_frames: true,
       run_at: "document_start",
     },
