@@ -16,12 +16,16 @@ const manifest = {
   action: {
     // default_popup: "src/pages/popup/index.html",
     default_icon: {
-      "32": "icon-32.png",
+      "16": "src/icons/16.png",
+      "32": "src/icons/32.png",
+      "48": "src/icons/48.png",
+      "64": "src/icons/64.png",
+      "128": "src/icons/128.png",
     },
   },
   icons: {
-    "16": "icon-16.png",
-    "128": "icon-128.png",
+    "128": "src/icons/128.png",
+    "16": "src/icons/16.png",
   },
   permissions: [
     "tabs",
@@ -30,29 +34,41 @@ const manifest = {
     "webRequest", // unknown if still need.
     "declarativeNetRequestWithHostAccess",
   ],
-  host_permissions: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
+  host_permissions: [
+    "*://*.youtube.com/*",
+    "*://*.holodex.net/*",
+    // "http://localhost:8080/*",
+    // "http://127.0.0.1:8080/*",
+  ],
   content_scripts: [
-    // {
-    //   matches: ["http://*/*", "https://*/*", "<all_urls>"],
-    //   js: ["src/pages/content/index.tsx"],
-    //   css: ["contentStyle.css"],
-    // },
     {
-      matches: ["*://*.holodex.net/*", "*://*.localhost*/*"],
-      js: ["src/pages/content/holodex/holodex.ts"],
+      matches: ["*://*.holodex.net/*"],
+      js: ["src/pages/content/holodex/contentScript.ts"],
       all_frames: true,
       run_at: "document_start",
     },
     {
       matches: ["*://*.youtube.com/live_chat*"],
-      js: ["src/pages/content/yt-chat/yt-chat.ts"],
+      js: ["src/pages/content/yt-chat/contentScript.ts"],
+      all_frames: true,
+      run_at: "document_end",
+    },
+    {
+      matches: ["*://*.youtube.com/*"],
+      js: ["src/pages/content/yt-watch/contentScript.ts"],
+      all_frames: true,
+      run_at: "document_end",
+    },
+    {
+      matches: ["*://*.youtube.com/embed/*"],
+      js: ["src/pages/content/yt-player/contentScript.ts"],
       all_frames: true,
       run_at: "document_start",
     },
   ],
   web_accessible_resources: [
     {
-      resources: ["contentStyle.css", "icon-128.png", "icon-32.png"],
+      resources: ["contentStyle.css"],
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
     },
   ],

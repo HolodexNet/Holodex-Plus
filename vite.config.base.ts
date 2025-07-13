@@ -16,7 +16,14 @@ const isDev = process.env.__DEV__ === 'true';
 export const baseManifest = {
   ...manifest,
   version: pkg.version,
-  ...(isDev ? devManifest : ({} as ManifestV3Export)),
+  // content_scripts: [
+  //   ...manifest.content_scripts,
+  //   ...(isDev ? devManifest.content_scripts : []),
+  // ],
+  // host_permissions: [
+  //   ...manifest.host_permissions,
+  //   ...(isDev ? devManifest.host_permissions : []),
+  // ],
   // ...(localize ? {
   //   name: '__MSG_extName__',
   //   description: '__MSG_extDescription__',
@@ -26,6 +33,16 @@ export const baseManifest = {
     ...manifest.web_accessible_resources,
     defineDynamicResource({
       matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
+    }),
+    defineDynamicResource({
+      matches: ["*://*.youtube.com/*"],
+    }),
+    defineDynamicResource({
+      matches: [
+        "*://*.holodex.net/*",
+        "http://localhost:8080/*",
+        "http://127.0.0.1:8080/*",
+      ],
     }),
   ],
 } as ManifestV3Export;
