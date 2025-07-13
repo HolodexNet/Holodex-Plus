@@ -1,12 +1,14 @@
 /* eslint-disable no-inner-declarations */
-import { inject, Options, sha1, validOrigin } from "@src/utils";
-import injectPath from "./injectPlayer?script&module";
+import { Options, sha1, validOrigin } from "@src/utils";
+// import injectPath from "./injectPlayer?script&module";
 
 const videoId = window.location.pathname.split("/").slice(-1)[0];
-if (videoId) {
-  console.log(inject, injectPath);
-  inject(injectPath);
-}
+
+// TODO: Optimize fetch audio, or move to a TLSync specific extension
+// if (videoId) {
+//   console.log(inject, injectPath);
+//   inject(injectPath);
+// }
 
 window.addEventListener("message", async (event) => {
   if (validOrigin(event.origin)) {

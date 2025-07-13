@@ -126,7 +126,7 @@ function Bouncer(e: MessageEvent) {
  */
 function Initializator(e: MessageEvent) {
   if (!validOrigin(e.origin)) {
-    console.warn("Invalid origin during initialization:", e.origin);
+    // console.warn("Invalid origin during initialization:", e.origin);
     return;
   }
 
