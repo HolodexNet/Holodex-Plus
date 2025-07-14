@@ -108,7 +108,7 @@ export async function getHolodexUrl(url: string | undefined, isMultiview: boolea
     }
 
     /** Match with given URL */
-    const result = matchURL(url, isMultiview);
+    const result = matchUrl(url, isMultiview);
     if (result) return result;
 
     /** Match with canonical URL */
@@ -117,7 +117,7 @@ export async function getHolodexUrl(url: string | undefined, isMultiview: boolea
       const canonicalUrl = await findCanonicalUrl(url);
 
       if (canonicalUrl) {
-        const result = matchURL(canonicalUrl, isMultiview);
+        const result = matchUrl(canonicalUrl, isMultiview);
         if (result) return result;
       }
     }
@@ -129,7 +129,7 @@ export async function getHolodexUrl(url: string | undefined, isMultiview: boolea
 }
 
 /** Attempt to match given URL */
-function matchURL(testUrl: string, isMultiview: boolean): string | undefined {
+function matchUrl(testUrl: string, isMultiview: boolean): string | undefined {
   const videoMatch = testUrl.match(VIDEO_URL_REGEX);
   if (videoMatch) {
     if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
