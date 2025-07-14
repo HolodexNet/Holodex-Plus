@@ -101,44 +101,49 @@ export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, isMultiv
  * from which to derive the Holodex URL from.
  */
 export async function getHolodexUrl(url: string | undefined, isMultiview: boolean) {
-  function matchURL(testUrl: string): string | undefined {
-    const videoMatch = testUrl.match(VIDEO_URL_REGEX);
-    if (videoMatch) {
-      if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
-      return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
-    }
-    const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
-    if (channelMatch) {
-      if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`)
-      return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
-    }
-  }
-
   if (url) {
+    /** Do nothing if the given URL is Holodex */
     if (HOLODEX_URL_REGEX.test(url)) {
       return null;
     }
 
-    const result = matchURL(url);
+    /** Match with given URL */
+    const result = matchURL(url, isMultiview);
     if (result) return result;
 
+    /** Match with canonical URL */
     const urlObj = new URL(url);
-    if (
-      YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) &&
-      !FEED_PATHNAME_REGEX.test(urlObj.pathname)
-    ) {
+    if (YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) && !FEED_PATHNAME_REGEX.test(urlObj.pathname)) {
       const canonicalUrl = await findCanonicalUrl(url);
+
       if (canonicalUrl) {
-        const result = matchURL(canonicalUrl);
+        const result = matchURL(canonicalUrl, isMultiview);
         if (result) return result;
       }
     }
   }
 
+  /** Return Holodex URL after all tests exhausted */
   if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`);
   return HOLODEX_URL_HOME;
 }
 
+/** Attempt to match given URL */
+function matchURL(testUrl: string, isMultiview: boolean): string | undefined {
+  const videoMatch = testUrl.match(VIDEO_URL_REGEX);
+  if (videoMatch) {
+    if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
+    return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
+  }
+
+  const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
+  if (channelMatch) {
+    if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`)
+    return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
+  }
+}
+
+/** Retrieve canonical URL */
 async function findCanonicalUrl(url: string): Promise<string | null> {
   console.debug("(fallback) fetch original page for canonical URL");
   const doc = await (await fetch(url)).text();

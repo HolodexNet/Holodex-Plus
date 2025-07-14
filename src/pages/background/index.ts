@@ -50,11 +50,14 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  let targetList = [
+  let ytVideoPages = [
     "https://*.youtube.com/",
     "https://*.youtube.com/feed/*",
     "https://*.youtube.com/watch?*",
     "https://*.youtube.com/shorts/*",
+  ];
+
+  let ytChannelPages = [
     "https://*.youtube.com/channel*",
     "https://*.youtube.com/@*",
   ];
@@ -62,19 +65,17 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "openInHolodex",
     title: "Open in Holodex",
-    contexts: ["link"],
+    contexts: ["link", "action"],
     documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: targetList,
+    targetUrlPatterns: [...ytVideoPages, ...ytChannelPages],
   });
-
-  for (let i = 0; i < 2; targetList.pop(), i++);
 
   chrome.contextMenus.create({
     id: "openInMultiView",
     title: "Open in MultiView",
     contexts: ["link", "action"],
     documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: targetList,
+    targetUrlPatterns: ytVideoPages,
   });
 });
 
