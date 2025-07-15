@@ -193,7 +193,7 @@ manager.handleAsk(
       const potKey = window.sessionStorage.getItem("iU5q-!O9@$");
       console.log(potKey)
       const potValue = window.sessionStorage.getItem((potKey ?? "_").split(",")[1]);
-      
+
       // The first value should be either the user's visitor data or their datasync id (if they're logged in).
       console.log(visitorData, potValue);
       const potToken = decodeCachedPoToken(visitorData, potValue);

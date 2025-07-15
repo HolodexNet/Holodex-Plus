@@ -6,18 +6,26 @@ const schema = {
   remoteYoutubeLikeButton: true,
   holodexButtonInYoutube: false,
   openHolodexInNewTab: true,
-  openInHolodexContextMenu: false,
+  // openInHolodexContextMenu: false,
 };
 type Schema = typeof schema;
-const descriptions: Partial<Record<keyof Schema, string>> = {
-  remoteYoutubeLikeButton:
-    "Add a 'Like on YouTube' button to Holodex videos - clicking it will open YouTube in a new tab",
-  holodexButtonInYoutube:
-    "Add a 'View in Holodex' button below YouTube videos for quick access to Holodex features",
-  openHolodexInNewTab:
-    "When clicking the extension icon, open Holodex in a new tab instead of the current one",
-  openInHolodexContextMenu:
-    "Add 'Open in Holodex' to the right-click menu for video links",
+const descriptions: Partial<Record<keyof Schema, { name: string, description: string }>> = {
+  remoteYoutubeLikeButton: {
+    name: "Like Button on Holodex",
+    description: "Add a 'Like on YouTube' button to Holodex videos - clicking it will open YouTube in a new tab",
+  },
+  holodexButtonInYoutube: {
+    name: "Holodex Button on YouTube",
+    description: "Add a 'View in Holodex' button below YouTube videos for quick access to Holodex features",
+  },
+  openHolodexInNewTab: {
+    name: "Open in New Tab",
+    description: "When clicking the extension icon, open Holodex in a new tab instead of the current one",
+  },
+  // openInHolodexContextMenu: {
+  //   name: "Holodex Context Menu",
+  //   description: "Add 'Open in Holodex' to the right-click menu for video links",
+  // },
 };
 
 export const Options = {
@@ -27,8 +35,13 @@ export const Options = {
   },
 
   /** Get an option's description */
+  name<K extends keyof Schema>(key: K): string | null{
+    return descriptions[key]?.name ?? null;
+  },
+
+  /** Get an option's description */
   description<K extends keyof Schema>(key: K): string | null {
-    return descriptions[key] ?? null;
+    return descriptions[key]?.description ?? null;
   },
 
   /** Get an option */
@@ -56,19 +69,28 @@ export const Options = {
 } as const;
 
 
+const HOLODEX_URL_HOME = "https://holodex.net";
 const HOLODEX_URL_REGEX = /^(?:[^:]+:\/\/)?(?:[^\/]+\.)?holodex.net\b/i;
-
-// This needs to match the YouTube URL matching in generate-manifest.js.
 const YOUTUBE_HOSTNAME_REGEX = /^(?:[^\/]+\.)?youtube.com/i;
-
 const FEED_PATHNAME_REGEX = /^(?:\/?$|\/feed\b)/i; // pathname matches homepage or any feed like subscriptions
-
 const CHANNEL_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{24}(?=[=\/?&#]|$)/;
-
 const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
-
-export const CANONICAL_URL_REGEX =
+const CANONICAL_URL_REGEX =
   /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
+
+export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, isMultiview: boolean = false) {
+  const holodexUrl = await getHolodexUrl(url, isMultiview);
+  if (!holodexUrl) return;
+
+  const currentTabId = tab.id;
+  if (await Options.get("openHolodexInNewTab") && tab.title !== "New Tab")
+    await chrome.tabs.create({ url: holodexUrl, index: tab.index + 1 });
+  else if (currentTabId)
+    await chrome.tabs.update(currentTabId, { url: holodexUrl });
+  else
+    // fallback behavior
+    await chrome.tabs.create({ url: holodexUrl, index: 9999 });
+}
 
 /**
  * Returns a promise resolving to the Holodex URL for given URL.
@@ -78,41 +100,57 @@ export const CANONICAL_URL_REGEX =
  * which is passed the given URL and returns a promise resolving to a YT canonical URL,
  * from which to derive the Holodex URL from.
  */
-export async function getHolodexUrl(
-  url: string | undefined,
-  findCanonicalUrl: (url: string) => Promise<string | null>
-) {
+export async function getHolodexUrl(url: string | undefined, isMultiview: boolean) {
   if (url) {
+    /** Do nothing if the given URL is Holodex */
     if (HOLODEX_URL_REGEX.test(url)) {
       return null;
     }
-    const videoMatch = url.match(VIDEO_URL_REGEX);
-    if (videoMatch) {
-      return `https://holodex.net/watch/${videoMatch[0]}`;
-    }
-    const channelMatch = url.match(CHANNEL_URL_REGEX);
-    if (channelMatch) {
-      return `https://holodex.net/channel/${channelMatch[0]}`;
-    }
+
+    /** Match with given URL */
+    const result = matchUrl(url, isMultiview);
+    if (result) return result;
+
+    /** Match with canonical URL */
     const urlObj = new URL(url);
-    if (
-      YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) &&
-      !FEED_PATHNAME_REGEX.test(urlObj.pathname)
-    ) {
+    if (YOUTUBE_HOSTNAME_REGEX.test(urlObj.hostname) && !FEED_PATHNAME_REGEX.test(urlObj.pathname)) {
       const canonicalUrl = await findCanonicalUrl(url);
+
       if (canonicalUrl) {
-        const videoMatch = canonicalUrl.match(VIDEO_URL_REGEX);
-        if (videoMatch) {
-          return `https://holodex.net/watch/${videoMatch[0]}`;
-        }
-        const channelMatch = canonicalUrl.match(CHANNEL_URL_REGEX);
-        if (channelMatch) {
-          return `https://holodex.net/channel/${channelMatch[0]}`;
-        }
+        const result = matchUrl(canonicalUrl, isMultiview);
+        if (result) return result;
       }
     }
   }
-  return "https://holodex.net";
+
+  /** Return Holodex URL after all tests exhausted */
+  if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`);
+  return HOLODEX_URL_HOME;
+}
+
+/** Attempt to match given URL */
+function matchUrl(testUrl: string, isMultiview: boolean): string | undefined {
+  const videoMatch = testUrl.match(VIDEO_URL_REGEX);
+  if (videoMatch) {
+    if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview/AAUY${videoMatch[0]}%2CUAEYchat`);
+    return HOLODEX_URL_HOME.concat(`/watch/${videoMatch[0]}`);
+  }
+
+  const channelMatch = testUrl.match(CHANNEL_URL_REGEX);
+  if (channelMatch) {
+    if (isMultiview) return HOLODEX_URL_HOME.concat(`/multiview`)
+    return HOLODEX_URL_HOME.concat(`/channel/${channelMatch[0]}`);
+  }
+}
+
+/** Retrieve canonical URL */
+async function findCanonicalUrl(url: string): Promise<string | null> {
+  console.debug("(fallback) fetch original page for canonical URL");
+  const doc = await (await fetch(url)).text();
+  const match = doc.match(CANONICAL_URL_REGEX);
+  const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
+  console.debug("(fallback) found canonical URL:", canonicalUrl);
+  return canonicalUrl;
 }
 
 /**
@@ -123,8 +161,7 @@ export async function getHolodexUrl(
 export async function inject(scriptPath: string) {
   const el = document.createElement("script");
   el.src = runtime.getURL(scriptPath);
-  // el.type = "text/javascript";
-  el.type = "module";
+  el.type = "text/javascript";
   const head = await waitForDOMPredicate(() => document.head);
   head.appendChild(el);
   return el;
@@ -314,39 +351,3 @@ function searchObjectHelper<T>(
   }
   return result;
 }
-
-
-export async function openHolodexUrl(url: string, tab?: chrome.tabs.Tab) {
-  const holodexUrl = await getHolodexUrl(url, async (url) => {
-    console.debug("(fallback) fetch original page for canonical URL");
-    const doc = await (await fetch(url)).text();
-    const match = doc.match(CANONICAL_URL_REGEX);
-    const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
-    console.debug("(fallback) found canonical URL:", canonicalUrl);
-    return canonicalUrl;
-  });
-  if (!holodexUrl) return;
-
-  const [currentTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (!currentTab) return;
-  const currentTabId = currentTab.id;
-  const openInNewTab = await Options.get("openHolodexInNewTab");
-  if (openInNewTab) {
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: currentTab.index + 1,
-    });
-  } else if (currentTabId) {
-    chrome.tabs.update(currentTabId, { url: holodexUrl });
-  } else {
-    // fallback behavior
-    chrome.tabs.create({
-      url: holodexUrl,
-      index: 9999,
-    });
-  }
-}
-

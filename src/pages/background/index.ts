@@ -50,26 +50,45 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
+  let ytVideoPages = [
+    "https://*.youtube.com/",
+    "https://*.youtube.com/feed/*",
+    "https://*.youtube.com/watch?*",
+    "https://*.youtube.com/shorts/*",
+  ];
+
+  let ytChannelPages = [
+    "https://*.youtube.com/channel*",
+    "https://*.youtube.com/@*",
+  ];
+
   chrome.contextMenus.create({
     id: "openInHolodex",
     title: "Open in Holodex",
-    contexts: ["link"],
+    contexts: ["link", "action"],
     documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: [
-      "https://*.youtube.com/",
-      "https://*.youtube.com/feed/*",
-      "https://*.youtube.com/channel*",
-      "https://*.youtube.com/watch?*",
-      "https://*.youtube.com/shorts/*",
-      "https://*.youtube.com/@*",
-    ],
+    targetUrlPatterns: [...ytVideoPages, ...ytChannelPages],
+  });
+
+  chrome.contextMenus.create({
+    id: "openInMultiView",
+    title: "Open in MultiView",
+    contexts: ["link", "action"],
+    documentUrlPatterns: ["https://*.youtube.com/*"],
+    targetUrlPatterns: ytVideoPages,
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "openInHolodex" && tab && tab.url) {
-    const linkUrl = info.linkUrl || tab.url;
-    await openHolodexUrl(linkUrl, tab);
+  if (!(tab && tab.url)) return;
+  const linkUrl = info.linkUrl || tab.url;
+  let isMultiview = false;
+
+  switch (info.menuItemId) {
+    case "openInMultiView":
+      isMultiview = true;
+    case "openInHolodex":
+      await openHolodexUrl(linkUrl, tab, isMultiview);
   }
 });
 
@@ -79,10 +98,9 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.greeting === "ytButton clicked")
-    if (request.pageUrl && sender.tab) {
-      openHolodexUrl(request.pageUrl, sender.tab);
-      sendResponse();
-    }
+  if (request.greeting === "ytButton clicked" && request.pageUrl && sender.tab) {
+    openHolodexUrl(request.pageUrl, sender.tab);
+    sendResponse();
+  }
   return true;
 });
