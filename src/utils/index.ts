@@ -4,7 +4,7 @@ import { storage, runtime } from "webextension-polyfill";
 const schema = {
   // key: default-value
   remoteYoutubeLikeButton: true,
-  holodexButtonInYoutube: false,
+  holodexButtonInYoutube: true,
   openHolodexInNewTab: true,
   // openInHolodexContextMenu: false,
 };

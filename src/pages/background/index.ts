@@ -98,7 +98,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.greeting === "ytButton clicked" && request.pageUrl && sender.tab) {
+  if (request.greeting === "ytButton_Click" && request.pageUrl && sender.tab) {
     openHolodexUrl(request.pageUrl, sender.tab);
     sendResponse();
   }

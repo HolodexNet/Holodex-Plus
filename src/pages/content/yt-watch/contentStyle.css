@@ -1,45 +1,43 @@
-.yt-watch-holodex-btn {
-  vertical-align: middle;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-}
+/*.yt-watch-holodex-btn {*/
+/*  vertical-align: middle;*/
+/*  white-space: nowrap;*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*}*/
 
-.yt-watch-holodex-icon {
-  width: 20px;
-  height: 20px;
-}
+/*.yt-watch-holodex-icon {*/
+/*  stroke-width: 2px; !important;*/
+/*}*/
 
-.yt-watch-holodex-icon path:nth-child(1) {
-  fill: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));
-}
-.yt-watch-holodex-icon path:nth-child(2) {
-  stroke: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));
-}
+/*.yt-watch-holodex-icon path:nth-child(1) {*/
+/*  fill: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));*/
+/*}*/
+/*.yt-watch-holodex-icon path:nth-child(2) {*/
+/*  fill: var(--yt-button-icon-button-text-color, var(--yt-spec-text-secondary));*/
+/*}*/
 
-.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(1) {
-  fill: #f06292;
-}
+/*.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(1) {*/
+/*  fill: #f06292;*/
+/*}*/
+/*.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(2) {*/
+/*  fill: #5da2f2;*/
+/*}*/
 
-.yt-watch-holodex-btn:hover .yt-watch-holodex-icon > path:nth-child(2) {
-  stroke: #5da2f2;
-}
+/*ytd-holodex-button-renderer {*/
+/*  display: inline-block;*/
+/*}*/
 
-ytd-holodex-button-renderer {
-  display: inline-block;
-}
+/*yt-holodex-button-shape {*/
+/*  display: -moz-box;*/
+/*  display: flex;*/
+/*  -moz-box-flex: 1;*/
+/*  flex: 1;*/
+/*  flex-basis: 0.000000001px*/
+/*}*/
 
-yt-holodex-button-shape {
-  display: -moz-box;
-  display: flex;
-  -moz-box-flex: 1;
-  flex: 1;
-  flex-basis: 0.000000001px
-}
-
-#holodex-button tp-yt-paper-tooltip:not(#tooltip.hidden) {
-  inset: auto 68px auto auto !important;
-}
+/*#holodex-button tp-yt-paper-tooltip:not(#tooltip.hidden) {*/
+/*  inset: auto 68px auto auto !important;*/
+/*}*/
 
 /*@media screen and (max-width: 1200px) {*/
 /*  .yt-watch-holodex-label {*/
