@@ -29,22 +29,22 @@ export const baseManifest = {
   //   description: '__MSG_extDescription__',
   //   default_locale : 'en'
   // } : {})
-  web_accessible_resources: [
-    ...manifest.web_accessible_resources,
-    defineDynamicResource({
-      matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
-    }),
-    defineDynamicResource({
-      matches: ["*://*.youtube.com/*"],
-    }),
-    defineDynamicResource({
-      matches: [
-        "*://*.holodex.net/*",
-        "http://localhost:8080/*",
-        "http://127.0.0.1:8080/*",
-      ],
-    }),
-  ],
+  // web_accessible_resources: [
+  //   ...manifest.web_accessible_resources,
+  //   defineDynamicResource({
+  //     matches: ["*://*.youtube.com/*", "*://*.holodex.net/*"],
+  //   }),
+  //   defineDynamicResource({
+  //     matches: ["*://*.youtube.com/*"],
+  //   }),
+  //   defineDynamicResource({
+  //     matches: [
+  //       "*://*.holodex.net/*",
+  //       "http://localhost:8080/*",
+  //       "http://127.0.0.1:8080/*",
+  //     ],
+  //   }),
+  // ],
 } as ManifestV3Export;
 
 export const baseBuildOptions: BuildOptions = {
