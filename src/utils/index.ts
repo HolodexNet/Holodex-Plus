@@ -1,10 +1,10 @@
-import { storage, runtime } from "webextension-polyfill";
+import {storage, runtime, Tabs} from "webextension-polyfill";
 
 // To add something to options, just add it to `schema`
 const schema = {
   // key: default-value
   remoteYoutubeLikeButton: true,
-  holodexButtonInYoutube: false,
+  holodexButtonInYoutube: true,
   openHolodexInNewTab: true,
   // openInHolodexContextMenu: false,
 };
@@ -78,7 +78,7 @@ const VIDEO_URL_REGEX = /(?<=[=\/?&#])[A-Za-z0-9\-_]{11}(?=[=\/?&#]|$)/;
 const CANONICAL_URL_REGEX =
   /\/(?:channel\/[A-Za-z0-9\-_]{24}|(?:shorts\/|watch\?v=)[A-Za-z0-9\-_]{11})\b/;
 
-export async function openHolodexUrl(url: string, tab: chrome.tabs.Tab, isMultiview: boolean = false) {
+export async function openHolodexUrl(url: string, tab: Tabs.Tab, isMultiview: boolean = false) {
   const holodexUrl = await getHolodexUrl(url, isMultiview);
   if (!holodexUrl) return;
 

@@ -1,135 +1,166 @@
 import { Options } from "@src/utils";
+import { logo, outline } from "@assets/img";
+import { runtime } from "webextension-polyfill";
 
-// Holodex button injected into YT pages
+// Holodex button injected into YouTube pages
 (async () => {
   if (!(await Options.get("holodexButtonInYoutube"))) return;
   console.log("[Holodex+] yt-watch script loaded");
 
-  let pageType = {shorts: false, watch: false}
   let pageUrl: string;
-  let rendering = false;
+  let pageType: string;
+
+  const selectors = {
+    shorts: "ytd-reel-video-renderer[is-active] #actions reel-action-bar-view-model",
+    watch: "#actions #top-level-buttons-computed",
+    buttonID: "#holodex-button",
+    tooltip: "yt-tooltip",
+    tooltipID: "#holodex-tooltip",
+    button: () => {return pageType === "shorts" ? selectors.shorts : selectors.watch;},
+    buttonFull: () => {return selectors.button() + " " + selectors.buttonID;},
+  }
 
   // This fires on both new page (re)load and internal navigation to another page
   // allowing it to clear the rendered flag.
   document.addEventListener("yt-navigate-finish", (evt: any) => {
     console.debug("[Holodex+] yt-navigate-finish event.detail:", evt.detail);
     pageUrl = "https://www.youtube.com" + evt.detail.response.url;
-    pageType.shorts = evt.detail.pageType === "shorts";
-    pageType.watch = evt.detail.pageType === "watch";
-    rendering = false;
+    pageType = evt.detail.pageType;
+    let counter = 0;
+
+    if (pageType !== "shorts" && pageType !== "watch") return;
+    const ytdApp = document.querySelector("ytd-app");
+    if (!ytdApp) return;
+
+    render.tooltip(ytdApp.querySelector(selectors.tooltip));
+    console.time("[Holodex+] MutationObserver")
+
+    // Setup mutation observer to (re)render on Watch and Shorts pages,
+    // both for new page (re)load and internal navigation to another page.
+    new MutationObserver((_, observer) => {
+      if (pageType !== "shorts" && pageType !== "watch") return;
+      const iteration = ++counter;
+      setTimeout(async ()=> {
+        if (ytdApp.querySelector(selectors.buttonFull())) return;
+        await render.button(ytdApp.querySelector(selectors.button()))
+
+        if (!ytdApp.querySelector(selectors.buttonFull())) return;
+        console.timeEnd("[Holodex+] MutationObserver")
+        console.log("[Holodex+] MutationObserver Iteration:", iteration)
+        observer.disconnect();
+      }, 200);
+    }).observe(ytdApp, { childList: true, subtree: true });
   });
 
-  function clickButton() {
-    const response = chrome.runtime.sendMessage({
+  const render: {tooltip: Function, button: Function} = {
+    tooltip: async (target: Element) => {
+      const nodes = document.querySelectorAll(selectors.tooltipID);
+      if (nodes.length === 1) return;
+
+      console.debug("[Holodex+] (re)rendering Holodex tooltip within", target);
+      const cloneTooltip = target.firstChild?.cloneNode(true) as HTMLElement;
+      cloneTooltip.id = "holodex-tooltip";
+      target.appendChild(cloneTooltip);
+
+      console.debug("[Holodex+] Holodex tooltip rendered:",
+        target.querySelector(selectors.tooltipID));
+    },
+    button: async (target: Element) => {
+      const nodes = target.querySelectorAll(selectors.buttonID)
+      for (const node of nodes)
+        node.remove();
+
+      console.debug("[Holodex+] (re)rendering Holodex button within", target);
+      const container = await createButton(target);
+      if (!container) return;
+
+      if (pageType === "shorts") target.insertBefore(container, target.firstChild);
+      else target.querySelector("yt-button-view-model")?.after(container)
+
+      console.debug("[Holodex+] Holodex button rendered:",
+        target.querySelector(selectors.buttonID));
+    }
+  }
+
+  function ytButton_Click() {
+    const response = runtime.sendMessage({
       pageUrl,
-      greeting: "ytButton clicked",
+      greeting: "ytButton_Click",
     });
     console.debug("[Holodex+] yt button clicked:", response);
   }
 
-  function render(target: Element) {
-    console.debug("[Holodex+] (re)rendering Holodex button within", target);
-    for (const container of document.querySelectorAll("#holodex-button")) {
-      container.remove();
-    }
+  function ytButton_MouseEnter() {
+    const ytPopover = document.getElementById("holodex-tooltip");
+    if (!ytPopover) return;
 
-    const holodexIcon = `
-    <svg class="yt-watch-holodex-icon" viewBox="10.646699905395508 4.526976108551025 18.35555076599121 17.86052703857422" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M13.7109 19.1446L13.7109 13.4572L13.7109 7.76991L14.6989 8.36834V13.4572L14.6989 18.5462L13.7109 19.1446ZM14.3575 22.0797C14.8429 22.4335 15.5224 22.5127 16.1107 22.1563L28.2404 14.8093C29.2562 14.1941 29.2562 12.7204 28.2404 12.1051L16.1107 4.75813C15.5224 4.40181 14.8429 4.48096 14.3574 4.8348L25.1328 11.3615C25.2107 11.4087 25.2848 11.4591 25.355 11.5125L27.7285 12.9502C28.1095 13.1809 28.1095 13.7336 27.7285 13.9643L25.3552 15.4018C25.2849 15.4553 25.2108 15.5058 25.1328 15.553L14.3575 22.0797Z"></path>
-      <path d="M10.6467 13.4572L10.6467 6.11021C10.6467 5.26342 11.5722 4.74193 12.2965 5.18064L24.4262 12.5276C25.1245 12.9506 25.1245 13.9638 24.4262 14.3868L12.2965 21.7338C11.5722 22.1725 10.6467 21.651 10.6467 20.8042L10.6467 13.4572Z" stroke-width="0.987994"></path>
-    </svg>
-    `;
+    const ytButton = document.querySelector(selectors.buttonFull() + " button");
+    if (!ytButton) return;
 
-    let ytElement = pageType.shorts
-      ? document.getElementById("share-button")
-      : target.querySelector("yt-button-view-model");
-    if (!ytElement) return;
+    const ytLogo = document.querySelector(selectors.buttonFull() + " svg");
+    if (!ytLogo) return;
+    ytLogo.outerHTML = logo;
 
-    const replaceValues = {
-      "<!--css-build:shady-->": "",
-      "<ytd-": "<ytd-holodex-",
-      "</ytd-": "</ytd-holodex-",
-      "<yt-": "<yt-holodex-",
-      "</yt-": "</yt-holodex-",
-    };
+    const rect = ytButton.getBoundingClientRect();
+    const leftSide = rect.x + (rect.width - 60) / 2 + window.scrollX;
+    const topSide = rect.y + rect.height + 16 + window.scrollY
 
-    const container = document.createElement(
-      pageType.shorts ? "div" : "yt-watch-holodex-btn-container",
-    );
-    container.setAttribute("id", "holodex-button");
-    container.className = ytElement.className;
-    container.innerHTML = ytElement.innerHTML;
-    for (const [searchValue, replaceValue] of Object.entries(replaceValues)) {
-      container.innerHTML = container.innerHTML.replaceAll(
-        searchValue,
-        replaceValue,
-      );
-    }
-    container.addEventListener("click", clickButton);
+    ytPopover.classList.add("ytTooltipContainerDefaultTooltipContent", ":popover-open");
+    ytPopover.style.inset = `${topSide}px auto auto ${leftSide}px`;
+    ytPopover.style.boxSizing = "content-box";
+    ytPopover.style.display = "block";
+    ytPopover.textContent = "Holodex";
+
+    setTimeout(() => {
+      ytPopover.classList.remove(":popover-open")
+    }, 100);
+  }
+
+  function ytButton_MouseLeave() {
+    const ytPopover = document.getElementById("holodex-tooltip");
+    if (!ytPopover) return;
+
+    const ytLogo = document.querySelector(selectors.buttonFull() + " svg");
+    if (!ytLogo) return;
+    ytLogo.outerHTML = outline;
+
+    ytPopover.classList.add("ytPopoverComponentHostClosing", ":popover-open");
+    setTimeout(() => {
+      ytPopover.style.removeProperty("inset");
+      ytPopover.style.removeProperty("box-sizing");
+      ytPopover.style.removeProperty("display");
+      ytPopover.textContent = "";
+      ytPopover.classList.remove("ytTooltipContainerDefaultTooltipContent", "ytPopoverComponentHostClosing", ":popover-open")
+    }, 50);
+  }
+
+  async function createButton(target: Element) {
+    const container = target.lastChild?.cloneNode(true) as Element;
+    container.id = "holodex-button";
+    container.removeAttribute("hidden");
+    container.addEventListener("click", ytButton_Click);
+    container.addEventListener("focus", ytButton_MouseEnter);
+    container.addEventListener("mouseenter", ytButton_MouseEnter);
+    container.addEventListener("mouseleave", ytButton_MouseLeave);
 
     const ytButton = container.querySelector("button");
     if (!ytButton) return;
+    ytButton.classList.add("yt-watch-holodex-btn");
+    ytButton.setAttribute("aria-label", "Open in Holodex");
 
-    const button = document.createElement("button");
-    button.className = ytButton.className;
-    button.classList.add("yt-watch-holodex-btn");
-    button.setAttribute("arial-label", "Open in Holodex");
-    button.innerHTML = `${holodexIcon}`;
-
-    const label = document.createElement("span");
+    let label = ytButton.nextSibling
+    if (!label) {
+      const child = ytButton.firstChild;
+      if (!child) return;
+      label = child.nextSibling;
+      if (!label) return;
+    }
     label.textContent = "Holodex";
 
-    if (pageType.shorts) {
-      const ytLabel = container.querySelector("span");
-      if (!ytLabel) return;
+    const holodexIcon = ytButton.querySelector("svg");
+    if (!holodexIcon) return;
+    holodexIcon.outerHTML = outline;
 
-      label.className = ytLabel.className;
-
-      const ytTooltip = container.querySelector("tp-yt-paper-tooltip");
-      if (!ytTooltip) return;
-      const tooltip = ytTooltip.cloneNode() as HTMLElement;
-      if (!tooltip) return;
-
-      tooltip.textContent = "Open in Holodex";
-
-      ytLabel.replaceWith(label);
-      ytTooltip.replaceWith(tooltip);
-    } else {
-      container.style.marginLeft = "8px";
-      button.setAttribute("title", "Open in Holodex");
-      label.classList.add("yt-watch-holodex-label");
-      label.style.marginLeft = "8px";
-
-      button.appendChild(label);
-    }
-
-    ytButton.replaceWith(button);
-    pageType.shorts ? target.insertBefore(container, target.firstChild) : target.appendChild(container);
-    console.log("[Holodex+] yt button rendered")
+    return container;
   }
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    const ytdApp = document.querySelector("ytd-app");
-    if (!ytdApp) return;
-
-    // Setup mutation observer to (re)render on Watch and Shorts pages,
-    // both for new page (re)load and internal navigation to another page.
-    new MutationObserver(() => {
-      if (rendering || !(pageType.shorts || pageType.watch)) return;
-      const ytdReelVideoRenderer = ytdApp.querySelector("ytd-reel-video-renderer[is-active]");
-
-      const actions = (pageType.shorts && ytdReelVideoRenderer ? ytdReelVideoRenderer : ytdApp).querySelector("#actions");
-      if (!actions) return;
-      console.debug("[Holodex+] found #actions:", actions);
-
-      // If #actions already contains #top-level-buttons-computed, render immediately.
-      // Note: #top-level-buttons-computed is not unique, so not using document.getElementById.
-      const target = actions.querySelector("#top-level-buttons-computed");
-
-      setTimeout(() => {
-        rendering = true;
-        render(!pageType.shorts && target ? target : actions);
-      }, 200)
-    }).observe(ytdApp, { childList: true, subtree: true });
-  });
 })();

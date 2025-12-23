@@ -1,8 +1,15 @@
-import { openHolodexUrl } from "@src/utils";
+import { openHolodexUrl , Options} from "@src/utils";
+import {
+  action,
+  contextMenus,
+  DeclarativeNetRequest,
+  declarativeNetRequest,
+  runtime,
+} from "webextension-polyfill";
 
 console.log("[Holodex+] background script loaded");
 
-chrome.runtime.onInstalled.addListener(() => {
+runtime.onInstalled.addListener(() => {
   // Define the rule to remove the "X-Frame-Options" header
   const rules = [
     {
@@ -40,67 +47,78 @@ chrome.runtime.onInstalled.addListener(() => {
         resourceTypes: ["xmlhttprequest"],
       },
     },
-  ] satisfies chrome.declarativeNetRequest.Rule[];
+  ] satisfies DeclarativeNetRequest.Rule[];
 
   // Clear existing rules and add the new rule
-  chrome.declarativeNetRequest.updateDynamicRules({
+  declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [1, 2],
     addRules: rules,
   });
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  let ytVideoPages = [
-    "https://*.youtube.com/",
+runtime.onInstalled.addListener(() => {
+  const ytVideoPages = [
     "https://*.youtube.com/feed/*",
     "https://*.youtube.com/watch?*",
     "https://*.youtube.com/shorts/*",
   ];
 
-  let ytChannelPages = [
+  const ytChannelPages = [
     "https://*.youtube.com/channel*",
     "https://*.youtube.com/@*",
   ];
 
-  chrome.contextMenus.create({
-    id: "openInHolodex",
+  contextMenus.create({
+    id: "openLinkHolodex",
     title: "Open in Holodex",
-    contexts: ["link", "action"],
-    documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: [...ytVideoPages, ...ytChannelPages],
+    contexts: ["link"],
+    targetUrlPatterns: [...ytVideoPages, ...ytChannelPages]
   });
 
-  chrome.contextMenus.create({
-    id: "openInMultiView",
-    title: "Open in MultiView",
-    contexts: ["link", "action"],
-    documentUrlPatterns: ["https://*.youtube.com/*"],
-    targetUrlPatterns: ytVideoPages,
+  contextMenus.create({
+    id: "openLinkMultiview",
+    title: "Open in Multiview",
+    contexts: ["link"],
+    targetUrlPatterns: ytVideoPages
   });
+
+  contextMenus.create({
+    id: "openPageHolodex",
+    title: "Open in Holodex",
+    contexts: ["page"],
+    documentUrlPatterns: [...ytVideoPages, ...ytChannelPages]
+  });
+
+  contextMenus.create({
+    id: "openPageMultiview",
+    title: "Open in Multiview",
+    contexts: ["page"],
+    documentUrlPatterns: ytVideoPages
+  });
+
 });
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+contextMenus.onClicked.addListener(async (info, tab) => {
   if (!(tab && tab.url)) return;
   const linkUrl = info.linkUrl || tab.url;
   let isMultiview = false;
 
-  switch (info.menuItemId) {
-    case "openInMultiView":
-      isMultiview = true;
-    case "openInHolodex":
-      await openHolodexUrl(linkUrl, tab, isMultiview);
-  }
+  const menuItem = info.menuItemId as string;
+
+  if (menuItem.includes("Multiview"))
+    isMultiview = true;
+
+  await openHolodexUrl(linkUrl, tab, isMultiview);
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
+action.onClicked.addListener(async (tab) => {
   if (!tab.id || !tab.url) return;
   await openHolodexUrl(tab.url, tab);
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.greeting === "ytButton clicked" && request.pageUrl && sender.tab) {
+runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.greeting === "ytButton_Click" && request.pageUrl && sender.tab) {
     openHolodexUrl(request.pageUrl, sender.tab);
     sendResponse();
   }
-  return true;
 });
