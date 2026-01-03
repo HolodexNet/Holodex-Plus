@@ -71,7 +71,8 @@ console.log("[Holodex+]", "Initializing");
 //   }
 // }
 
-interface YTFFormat extends Format {}
+interface YTFFormat extends Format {
+}
 
 const ytAudioDLProtocol: ProtoframeDescriptor<{
   fetchAudio: {
@@ -86,7 +87,7 @@ const ytAudioDLProtocol: ProtoframeDescriptor<{
   };
 }> = { type: "audio_dl" };
 
-function b64ToU8(base64) {
+function b64ToU8(base64: string) {
   const str = atob(base64);
   const len = str.length;
   const bytes = new Uint8Array(len);
@@ -96,13 +97,13 @@ function b64ToU8(base64) {
   return bytes;
 }
 
-function u8ToB64(u8, urlSafe = false) {
+function u8ToB64(u8: Uint8Array, urlSafe = false) {
   const buf = String.fromCharCode(...u8);
   const base64 = btoa(buf);
   return urlSafe ? base64.replace(/\//g, "_").replace(/\+/g, "-") : base64;
 }
 
-function computeHash(input, start = 0, end = input.length) {
+function computeHash(input: string | any[], start = 0, end = input.length) {
   let hash = 0;
   for (let i = start; i < end; i++) {
     const code = typeof input === "string" ? input.charCodeAt(i) : input[i];
@@ -111,13 +112,13 @@ function computeHash(input, start = 0, end = input.length) {
   return hash;
 }
 
-function generateKeyPair(keyMaterial) {
+function generateKeyPair(keyMaterial: string | any[]) {
   const mid = keyMaterial.length >> 1;
-  return [computeHash(keyMaterial, 0, mid), computeHash(keyMaterial, mid)];
+  return [ computeHash(keyMaterial, 0, mid), computeHash(keyMaterial, mid) ];
 }
 
-function transformData(data, keyMaterial) {
-  const [key1, key2] = generateKeyPair(keyMaterial);
+function transformData(data: Uint8Array, keyMaterial: string | any[]) {
+  const [ key1, key2 ] = generateKeyPair(keyMaterial);
   const data32 = new Uint32Array(data.buffer);
   const firstWord = data32[0];
 
@@ -144,15 +145,15 @@ function transformData(data, keyMaterial) {
   }
 }
 
-function decodeCachedPoToken(identifier, encodedPoToken) {
-  const data = b64ToU8(encodedPoToken);
+function decodeCachedPoToken(identifier: string | any[], encodedPoToken: string | null) {
+  const data = b64ToU8(typeof encodedPoToken === "string" ? encodedPoToken : "");
   transformData(data, identifier);
 
   let index = 4;
   while (index < 7 && data[index] === 0) index++;
 
   // Not sure if these ever change, they're hardcoded in the original code. It's obviously for some kind of validation.
-  const VALIDATION_BYTES = [196, 200, 224, 18];
+  const VALIDATION_BYTES = [ 196, 200, 224, 18 ];
 
   for (let i = 0; i < VALIDATION_BYTES.length; i++) {
     if (data[index++] !== VALIDATION_BYTES[i])
@@ -176,7 +177,7 @@ const manager = ProtoframePubsub.iframe(ytAudioDLProtocol);
 manager.handleAsk(
   "fetchAudio",
   async (
-    body
+    body,
   ): Promise<{ state: "ok" | "failed"; msg: string; format?: YTFFormat }> => {
     if (!body.videoId) {
       console.error("[Holodex+] No video ID");
@@ -206,7 +207,7 @@ manager.handleAsk(
         po_token: potToken.poToken,
         client_type: ClientType.WEB_EMBEDDED,
         fetch: async (url, options) => {
-          console.log(`Fetching: ${url}, options: ${JSON.stringify(options)}`);
+          console.log(`Fetching: ${ url }, options: ${ JSON.stringify(options) }`);
           let response = await window.fetch(url, {
             ...options,
             // redirect: "manual",
@@ -216,7 +217,7 @@ manager.handleAsk(
           if (response.status === 301 || response.status === 302) {
             const redirectedUrl = response.headers.get("Location");
             if (redirectedUrl) {
-              console.log(`Redirected to: ${redirectedUrl}`);
+              console.log(`Redirected to: ${ redirectedUrl }`);
               // Make a new request to the redirected URL, including headers if needed
               response = await window.fetch(redirectedUrl, {
                 ...options,
@@ -274,7 +275,7 @@ manager.handleAsk(
                   });
                 } else {
                   const progress = Math.round(
-                    (downloadedBytes / totalBytes) * 100
+                    (downloadedBytes / totalBytes) * 100,
                   );
                   manager.tell("progress", {
                     percentage: progress * 0.95,
@@ -298,10 +299,10 @@ manager.handleAsk(
             (reason) => {
               resolve({
                 state: "failed",
-                msg: "Error occured: " + new String(reason || "???"),
+                msg: "Error occured: " + String(reason || "???"),
                 format: undefined,
               });
-            }
+            },
           );
       });
     } catch (e) {
@@ -309,9 +310,9 @@ manager.handleAsk(
       console.error("Failed to download from Youtube...?");
       return {
         state: "failed",
-        msg: "Error occured: " + new String(e || "???"),
+        msg: "Error occured: " + String(e || "???"),
         format: undefined,
       };
     }
-  }
+  },
 );

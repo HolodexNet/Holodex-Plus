@@ -1,4 +1,4 @@
-import { openHolodexUrl , Options} from "@src/utils";
+import { openHolodexUrl } from "@utils";
 import {
   action,
   contextMenus,
@@ -25,8 +25,8 @@ runtime.onInstalled.addListener(() => {
         ],
       },
       condition: {
-        initiatorDomains: ["youtube.com"],
-        resourceTypes: ["sub_frame", "main_frame"],
+        initiatorDomains: [ "youtube.com" ],
+        resourceTypes: [ "sub_frame", "main_frame" ],
       },
     },
     {
@@ -44,14 +44,14 @@ runtime.onInstalled.addListener(() => {
       },
       condition: {
         urlFilter: "https://www.youtube.com/youtubei/v1/like/*",
-        resourceTypes: ["xmlhttprequest"],
+        resourceTypes: [ "xmlhttprequest" ],
       },
     },
   ] satisfies DeclarativeNetRequest.Rule[];
 
   // Clear existing rules and add the new rule
   declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1, 2],
+    removeRuleIds: [ 1, 2 ],
     addRules: rules,
   });
 });
@@ -71,29 +71,29 @@ runtime.onInstalled.addListener(() => {
   contextMenus.create({
     id: "openLinkHolodex",
     title: "Open in Holodex",
-    contexts: ["link"],
-    targetUrlPatterns: [...ytVideoPages, ...ytChannelPages]
+    contexts: [ "link" ],
+    targetUrlPatterns: [ ...ytVideoPages, ...ytChannelPages ],
   });
 
   contextMenus.create({
     id: "openLinkMultiview",
     title: "Open in Multiview",
-    contexts: ["link"],
-    targetUrlPatterns: ytVideoPages
+    contexts: [ "link" ],
+    targetUrlPatterns: ytVideoPages,
   });
 
   contextMenus.create({
     id: "openPageHolodex",
     title: "Open in Holodex",
-    contexts: ["page"],
-    documentUrlPatterns: [...ytVideoPages, ...ytChannelPages]
+    contexts: [ "page" ],
+    documentUrlPatterns: [ ...ytVideoPages, ...ytChannelPages ],
   });
 
   contextMenus.create({
     id: "openPageMultiview",
     title: "Open in Multiview",
-    contexts: ["page"],
-    documentUrlPatterns: ytVideoPages
+    contexts: [ "page" ],
+    documentUrlPatterns: ytVideoPages,
   });
 
 });

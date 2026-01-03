@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "types": ["vite/client", "node", "chrome-types"],
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": [ "vite/client", "node", "chrome-types" ],
+    "lib": [ "dom", "dom.iterable", "esnext" ],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -17,10 +17,11 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
-      "@assets/*": ["src/assets/*"],
-      "@locales/*": ["src/locales/*"],
-      "@pages/*": ["src/pages/*"]
+      "@src/*": [ "src/*" ],
+      "@assets/*": [ "src/assets/*" ],
+      "@locales/*": [ "src/locales/*" ],
+      "@pages/*": [ "src/pages/*" ],
+      "@utils": [ "src/utils" ]
     }
   },
   "include": [

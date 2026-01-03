@@ -1,11 +1,19 @@
 {
   "content_scripts": [
     {
-      "matches": ["http://localhost:8080/*", "http://127.0.0.1:8080/*"],
-      "js": ["src/pages/content/holodex/contentScript.ts"],
+      "matches": [
+        "http://localhost:8080/*",
+        "http://127.0.0.1:8080/*"
+      ],
+      "js": [
+        "src/pages/content/holodex/contentScript.ts"
+      ],
       "all_frames": true,
       "run_at": "document_start"
     }
   ],
-  "host_permissions": ["http://localhost:8080/*", "http://127.0.0.1:8080/*"]
+  "host_permissions": [
+    "http://localhost:8080/*",
+    "http://127.0.0.1:8080/*"
+  ]
 }

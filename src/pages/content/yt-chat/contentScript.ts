@@ -1,4 +1,4 @@
-import { inject, validOrigin } from "@src/utils";
+import { inject, validOrigin } from "@utils";
 import injectPath from "./inject?script&module";
 import { ProtoframePubsub } from "protoframe";
 import { tlsyncProtocol } from "./tlsyncProtocol";
@@ -50,9 +50,7 @@ ExtContainer.appendChild(spn);
  */
 function SendTextEnter(inputtext: string) {
   if (!InputTextField || !SendButtonElement) {
-    console.error(
-      "SendTextEnter called but InputTextField or SendButtonElement is not set."
-    );
+    console.error("SendTextEnter called but InputTextField or SendButtonElement is not set.");
     return;
   }
   console.debug("Sending text:", inputtext);
@@ -72,9 +70,7 @@ function SendTextEnter(inputtext: string) {
 function setupState(): boolean {
   console.debug("Setting up state...");
   SendButtonElement = document.querySelector("#send-button button");
-  InputTextField = document.querySelector(
-    "#input.yt-live-chat-text-input-field-renderer"
-  );
+  InputTextField = document.querySelector("#input.yt-live-chat-text-input-field-renderer");
 
   if (!SendButtonElement || !InputTextField) {
     console.warn("Failed to locate chatbox elements.");
@@ -183,7 +179,7 @@ manager.handleAsk(
       "Holodex+ TL Sync Initiation Requested:",
       body,
       "at",
-      new Date()
+      new Date(),
     );
 
     if (body?.info) {
@@ -203,7 +199,7 @@ manager.handleAsk(
       console.error("Initialization failed.");
       return { state: "failed" };
     }
-  }
+  },
 );
 
 manager.handleTell("sendMessage", (body) => {

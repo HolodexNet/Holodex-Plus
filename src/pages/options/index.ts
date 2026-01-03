@@ -1,4 +1,4 @@
-import { entries, Options } from "@src/utils";
+import { entries, Options } from "@utils";
 import "@assets/styles/tailwind.css";
 
 // const HelpIcon = () => `
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   form.prepend(subtitle);
   form.prepend(title);
 
-  for (const [option, defaultValue] of entries(Options.schema())) {
+  for (const [ option, defaultValue ] of entries(Options.schema())) {
     const container = document.createElement("div");
     container.className =
       "items-center justify-between p-4 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors";
