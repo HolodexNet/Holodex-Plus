@@ -1,11 +1,15 @@
-import { Options } from "@src/utils";
-import { logo, outline } from "@assets/img";
+import { Options, loadSVGElement } from "@utils";
 import { runtime } from "webextension-polyfill";
+import logoRaw from "@assets/img/logo.svg?raw"
+import outlineRaw from "@assets/img/outline.svg?raw";
 
 // Holodex button injected into YouTube pages
 (async () => {
   if (!(await Options.get("holodexButtonInYoutube"))) return;
   console.log("[Holodex+] yt-watch script loaded");
+
+  const logo = loadSVGElement(logoRaw);
+  const outline = loadSVGElement(outlineRaw);
 
   let pageUrl: string;
   let pageType: string;
@@ -16,8 +20,8 @@ import { runtime } from "webextension-polyfill";
     buttonID: "#holodex-button",
     tooltip: "yt-tooltip",
     tooltipID: "#holodex-tooltip",
-    button: () => {return pageType === "shorts" ? selectors.shorts : selectors.watch;},
-    buttonFull: () => {return selectors.button() + " " + selectors.buttonID;},
+    button: () => { return pageType === "shorts" ? selectors.shorts : selectors.watch; },
+    buttonFull: () => { return selectors.button() + " " + selectors.buttonID; },
   }
 
   // This fires on both new page (re)load and internal navigation to another page
@@ -40,7 +44,7 @@ import { runtime } from "webextension-polyfill";
     new MutationObserver((_, observer) => {
       if (pageType !== "shorts" && pageType !== "watch") return;
       const iteration = ++counter;
-      setTimeout(async ()=> {
+      setTimeout(async () => {
         if (ytdApp.querySelector(selectors.buttonFull())) return;
         await render.button(ytdApp.querySelector(selectors.button()))
 
@@ -52,7 +56,7 @@ import { runtime } from "webextension-polyfill";
     }).observe(ytdApp, { childList: true, subtree: true });
   });
 
-  const render: {tooltip: Function, button: Function} = {
+  const render: { tooltip: Function, button: Function } = {
     tooltip: async (target: Element) => {
       const nodes = document.querySelectorAll(selectors.tooltipID);
       if (nodes.length === 1) return;
@@ -79,7 +83,7 @@ import { runtime } from "webextension-polyfill";
 
       console.debug("[Holodex+] Holodex button rendered:",
         target.querySelector(selectors.buttonID));
-    }
+    },
   }
 
   function ytButton_Click() {
@@ -99,14 +103,14 @@ import { runtime } from "webextension-polyfill";
 
     const ytLogo = document.querySelector(selectors.buttonFull() + " svg");
     if (!ytLogo) return;
-    ytLogo.outerHTML = logo;
+    ytLogo.outerHTML = logo.outerHTML;
 
     const rect = ytButton.getBoundingClientRect();
     const leftSide = rect.x + (rect.width - 60) / 2 + window.scrollX;
     const topSide = rect.y + rect.height + 16 + window.scrollY
 
     ytPopover.classList.add("ytTooltipContainerDefaultTooltipContent", ":popover-open");
-    ytPopover.style.inset = `${topSide}px auto auto ${leftSide}px`;
+    ytPopover.style.inset = `${ topSide }px auto auto ${ leftSide }px`;
     ytPopover.style.boxSizing = "content-box";
     ytPopover.style.display = "block";
     ytPopover.textContent = "Holodex";
@@ -122,7 +126,7 @@ import { runtime } from "webextension-polyfill";
 
     const ytLogo = document.querySelector(selectors.buttonFull() + " svg");
     if (!ytLogo) return;
-    ytLogo.outerHTML = outline;
+    ytLogo.outerHTML = outline.outerHTML;
 
     ytPopover.classList.add("ytPopoverComponentHostClosing", ":popover-open");
     setTimeout(() => {
@@ -159,7 +163,7 @@ import { runtime } from "webextension-polyfill";
 
     const holodexIcon = ytButton.querySelector("svg");
     if (!holodexIcon) return;
-    holodexIcon.outerHTML = outline;
+    holodexIcon.outerHTML = outline.outerHTML;
 
     return container;
   }

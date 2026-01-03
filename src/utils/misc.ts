@@ -1,0 +1,207 @@
+import { runtime } from "webextension-polyfill";
+
+/**
+ * Inject a script onto the page. Script must be
+ * accessible via `runtime.getURL` - add it to
+ * `accessible` in rollup config first.
+ */
+export async function inject(scriptPath: string) {
+  const el = document.createElement("script");
+  el.src = runtime.getURL(scriptPath);
+  el.type = "text/javascript";
+  const head = await waitForDOMPredicate(() => document.head);
+  head.appendChild(el);
+  return el;
+}
+
+type Entries<T> = { [K in keyof T]: [ K, T[K] ] }[keyof T][];
+
+/**
+ * Same as `Object.entries`, but strongly typed.
+ *
+ * **Only use this for constant objects!**
+ */
+export function entries<T>(object: T): Entries<T> {
+  return Object.entries(object as any) as any;
+}
+
+/**
+ * Split `text` into fragments, where each fragment
+ * after the first starts with an upper-case letter.
+ *
+ * Example:
+ * ```ts
+ * splitOnUpperCase("someTextWithUpperCase") // ["some", "Text", "With", "Upper", "Case"]
+ * ```
+ */
+export function splitOnUpperCase(text: string): string[] {
+  const result = new Array<string>();
+  let s = 0;
+  for (let i = 0; i < text.length; ++i) {
+    if (text[i].toUpperCase() === text[i]) {
+      result.push(text.substring(s, i));
+      s = i;
+    }
+  }
+  if (text.length - s > 1) result.push(text.substring(s));
+  return result;
+}
+
+const encoder = new TextEncoder();
+
+/**
+ * Encode a string as SHA1
+ */
+export async function sha1(message: string) {
+  const bytes = new Uint8Array(
+    await crypto.subtle.digest("SHA-1", encoder.encode(message)),
+  );
+  let hash = "";
+  for (let i = 0; i < bytes.length; ++i) {
+    hash += bytes[i].toString(16).padStart(2, "0");
+  }
+  return hash;
+}
+
+/**
+ * Creates an SVG element with `className=${clazz}`,
+ * and a child path with `d=${d}`
+ */
+export const svg = (d: string, clazz?: string) => {
+  const xmlns = "http://www.w3.org/2000/svg";
+
+  const out = document.createElementNS(xmlns, "svg");
+  out.setAttributeNS(null, "viewBox", "0 0 24 24");
+  if (clazz) out.classList.add(...clazz.split(" "));
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttributeNS(null, "d", d);
+  out.appendChild(path);
+  return out;
+};
+
+export function loadSVGElement(svgRaw: string) {
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgRaw, 'image/svg+xml');
+  return svgDoc.documentElement;
+}
+
+interface WaitForOptions {
+  root?: Element | Document;
+  timeout?: number;
+}
+
+/**
+ * Wait until given "DOM predicate" is satisfied, i.e. returns a truthy value,
+ * and returns a promise that resolves to that truthy value.
+ * The predicate is called immediately with an empty array,
+ * and then for every batch of DOM subtree mutations (via MutationObserver)
+ * until the predicate is satisfied.
+ *
+ * Options:
+ * - root: the element or document to watch for DOM mutations
+ * - timeout: if specified, the promise is rejected after timeout milliseconds
+ *
+ * Most web apps don't render the whole page at once,
+ * so attempting to modify a web app's content at document
+ * load will probably fail. This should be more reliable.
+ */
+export function waitForDOMPredicate<T>(
+  predicate: (mutations: MutationRecord[]) => T | null,
+  options?: WaitForOptions,
+) {
+  const result = predicate([]);
+  if (result) return Promise.resolve(result);
+  return new Promise<T>((resolve, reject) => {
+    const observer = new MutationObserver((mutations, observer) => {
+      const result = predicate(mutations);
+      if (result) {
+        observer.disconnect();
+        resolve(result);
+      }
+    });
+    observer.observe(options?.root ?? document, {
+      childList: true,
+      subtree: true,
+    });
+    const timeout = options?.timeout;
+    if (timeout) {
+      setTimeout(() => {
+        observer.disconnect();
+        reject(
+          new Error(`waitForDOMPredicate timed out after ${ timeout } msecs`),
+        );
+      }, timeout);
+    }
+  });
+}
+
+/**
+ * Wait until DOM element with given id exists,
+ * returning a promise that resolves to that element.
+ *
+ * See waitForDOMPredicate for options.
+ */
+export function waitForElementId(id: string, options?: WaitForOptions) {
+  return waitForDOMPredicate<Element>(
+    () => document.getElementById(id),
+    options,
+  );
+}
+
+export function validOrigin(origin: string) {
+  return origin.match(/^https?:\/\/(localhost:|(\S+\.)?holodex\.net)/i);
+}
+
+interface SearchObjectItem {
+  val: any;
+  prop: string;
+  parent: SearchObjectItem | null;
+}
+
+/**
+ * Recursively searches an object and its entries until given predicate is satisfied,
+ * i.e. returns truthy value, and returns that truthy value.
+ * If the predicate is never satisfied, returns the last (falsy) value it returned.
+ *
+ * The predicate is passed: {
+ *    val: property value, or given object at root),
+ *    prop: property name, or '' at root),
+ *    parent: parent {val, prop, parent} object (this is a recursive data structure), or null at root
+ * }
+ *
+ * Supports de-facto entries() protocol used by Map and Set (and Array) types,
+ * along with standard object enumeration ([own property, value] entries).
+ * This does mean extra properties on objects that aren't included in entries() won't be iterated over.
+ */
+export function searchObject<T>(
+  obj: any,
+  predicate: (val: SearchObjectItem) => T,
+) {
+  return searchObjectHelper(
+    { val: obj, prop: "", parent: null },
+    predicate,
+    new Set(),
+  );
+}
+
+function searchObjectHelper<T>(
+  item: SearchObjectItem,
+  predicate: (val: SearchObjectItem) => T,
+  walked: Set<any>,
+) {
+  let result = predicate(item);
+  if (result) return result;
+  const obj = item.val;
+  if (walked.has(obj)) return result;
+  walked.add(obj);
+  if (obj === undefined || typeof obj !== "object") return result;
+  // Support de-facto entries() protocol used by Map and Set (and Array) types, along with standard object enumeration.
+  // This does mean extra properties on objects of such types that aren't included in entries() won't be iterated over.
+  const entries =
+    typeof obj.entries === "function" ? obj.entries() : Object.entries(obj);
+  for (const [ prop, val ] of entries) {
+    result = searchObjectHelper({ val, prop, parent: item }, predicate, walked);
+    if (result) return result;
+  }
+  return result;
+}

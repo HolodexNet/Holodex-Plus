@@ -1,6 +1,6 @@
 // Fix theme not following query param on archive chat
 const darkThemeParam = new URLSearchParams(window.location.search).get(
-  "dark_theme"
+  "dark_theme",
 );
 if (darkThemeParam === "1") {
   document.querySelector("html")?.setAttribute("dark", "");
