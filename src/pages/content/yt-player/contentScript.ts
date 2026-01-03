@@ -56,8 +56,8 @@ async function getYtLikeData() {
   );
   const apiKey = doc.match(/"INNERTUBE_API_KEY":"(.*?)"/)?.[1];
   const context = JSON.parse(
-    (doc.match(/\(\{"INNERTUBE_CONTEXT":([\w\W]*?)\}\)/) ||
-      doc.match(/"INNERTUBE_CONTEXT":([\w\W]*?\}),"INNERTUBE/))?.[1] ?? "{}",
+    (doc.match(/\(\{"INNERTUBE_CONTEXT":([\w\W]*?)}\)/) ||
+      doc.match(/"INNERTUBE_CONTEXT":([\w\W]*?}),"INNERTUBE/))?.[1] ?? "{}",
   );
   const ytClientName = doc.match(/"INNERTUBE_CONTEXT_CLIENT_NAME":(\d+),/)?.[1];
   const ytClientVersion = doc.match(
