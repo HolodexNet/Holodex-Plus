@@ -70,6 +70,14 @@ const manifest = {
   // "chrome_url_overrides": {
   //   "newtab": "src/pages/newtab/index.html"
   // },
+  browser_specific_settings: {
+    gecko: {
+      id: "{7ff078b3-b3e9-44df-a646-45c702b2e17c}",
+      data_collection_permissions: {
+        required: ["none"],
+      },
+    },
+  },
 } as const satisfies ManifestV3Export;
 
 export default manifest;

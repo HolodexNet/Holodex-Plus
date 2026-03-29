@@ -26,7 +26,7 @@
     "youtubei.js": "^12.2.0"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "2.0.0-beta.28",
+    "@crxjs/vite-plugin": "2.4.0",
     "@types/chrome": "^0.0.287",
     "@types/node": "^20.12.14",
     "@types/react": "^18.3.1",
