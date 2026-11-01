@@ -11,6 +11,10 @@ import outlineRaw from "@assets/img/outline.svg?raw";
   const logo = loadSVGElement(logoRaw);
   const outline = loadSVGElement(outlineRaw);
 
+  [logo, outline].forEach(element => {
+    element.style.transform = "translateX(1.2px)";
+  });
+
   let pageUrl: string;
   let pageType: string;
 
@@ -159,7 +163,6 @@ import outlineRaw from "@assets/img/outline.svg?raw";
       label = child.nextSibling;
       if (!label) return;
     }
-    label.textContent = "Holodex";
 
     const holodexIcon = ytButton.querySelector("svg");
     if (!holodexIcon) return;
